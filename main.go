@@ -1,0 +1,52 @@
+package main
+
+import (
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	
+	"github.com/cleoexcel/ristek-test/middleware"
+	"github.com/cleoexcel/ristek-test/app/auth"
+	"github.com/cleoexcel/ristek-test/config"
+	"github.com/cleoexcel/ristek-test/app/tryout"
+	"github.com/cleoexcel/ristek-test/app/question"
+)
+
+var db *gorm.DB
+
+func main() {
+	db = config.InitDatabase()
+	r := gin.Default()
+	r.Use(cors.Default())
+
+	repo := auth.NewRepository(db)
+	service := auth.NewAuthService(repo)
+	handler := auth.NewAuthHandler(service)
+
+	r.GET("/auth/get-all-user", handler.GetAllUsers)
+	r.POST("/auth/register", handler.Register)
+	r.POST("/auth/login", handler.Login)
+
+	r.Use(middleware.AuthMiddleware())
+
+	tryoutrepo := tryout.NewRepository(db)
+	tryoutservice := tryout.NewTryoutService(tryoutrepo)
+	tryouthandler := tryout.NewTryoutHandler(tryoutservice)
+
+	r.POST("/tryout/create-tryout", tryouthandler.CreateTryout)
+	r.GET("/tryout/get-all-tryout", tryouthandler.GetAllTryout)
+	r.GET("/tryout/get-detail-tryout/:id", tryouthandler.GetDetailTryout)
+	r.PATCH("/tryout/edit-tryout/:id", tryouthandler.EditTryout)
+	r.DELETE("/tryout/delete-tryout/:id", tryouthandler.DeleteTryoutById)
+
+	questionrepo := question.NewRepository(db)
+	questionservice := question.NewQuestionService(questionrepo)
+	questionhandler := question.NewQuestionHandler(questionservice, questionrepo)
+
+	r.POST("/question/create-question", questionhandler.CreateQuestion)
+	r.GET("/question/get-all-question/:id", questionhandler.GetAllQuestions)
+	r.PATCH("/question/edit-question/:id", questionhandler.EditQuestion)
+	r.DELETE("/question/delete-question/:id", questionhandler.DeleteQuestion)
+
+	r.Run(":8080")
+}
