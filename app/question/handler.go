@@ -3,26 +3,27 @@ package question
 import (
 	"net/http"
 	"strconv"
-	"github.com/cleoexcel/ristek-test/app/utils/enum"
+
 	"github.com/cleoexcel/ristek-test/app/models"
+	"github.com/cleoexcel/ristek-test/app/utils/enum"
 	"github.com/gin-gonic/gin"
 )
 
 type QuestionHandler struct {
 	service QuestionService
-	repo Repository
+	repo    Repository
 }
 
 func NewQuestionHandler(service QuestionService, repo Repository) *QuestionHandler {
-    return &QuestionHandler{service: service, repo: repo}
+	return &QuestionHandler{service: service, repo: repo}
 }
 
 func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 	var input struct {
-		Number       int    `json:"number"`
 		Content      string `json:"content"`
 		TryoutID     int    `json:"tryout_id"`
 		QuestionType string `json:"question_type"`
+		Weight       int    `json:"weight"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -41,7 +42,7 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 		return
 	}
 
-	err := h.service.CreateQuestion(input.Number, input.Content, input.TryoutID, input.QuestionType)
+	err := h.service.CreateQuestion( input.Content, input.TryoutID, input.QuestionType, input.Weight)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
@@ -49,8 +50,6 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Question created successfully"})
 }
-
-
 
 func (h *QuestionHandler) GetAllQuestions(c *gin.Context) {
 	tryoutIDStr := c.Param("id")
@@ -77,9 +76,9 @@ func (h *QuestionHandler) GetAllQuestions(c *gin.Context) {
 
 func (h *QuestionHandler) EditQuestion(c *gin.Context) {
 	var input struct {
-		Number       int    `json:"number"`
 		Content      string `json:"content"`
 		QuestionType string `json:"question_type"`
+		Weight       int    `json:"weight"`
 	}
 
 	idStr := c.Param("id")
@@ -94,7 +93,7 @@ func (h *QuestionHandler) EditQuestion(c *gin.Context) {
 		return
 	}
 
-	question, err := h.service.EditQuestion(id, input.Number, input.Content, input.QuestionType)
+	question, err := h.service.EditQuestion(id, input.Content, input.QuestionType, input.Weight)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return

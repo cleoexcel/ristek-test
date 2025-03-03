@@ -2,14 +2,15 @@ package question
 
 import (
 	"fmt"
+
 	"github.com/cleoexcel/ristek-test/app/models"
 	"gorm.io/gorm"
 )
 
 type Repository interface {
 	GetAllQuestions(tryoutID int) ([]*models.Question, error)
-	CreateQuestion(number int, content string, tryoutID int, questionType string) (*models.Question, error)
-	EditQuestion(id int, number int, content string, questionType string) (*models.Question, error)
+	CreateQuestion( content string, tryoutID int, questionType string, weight int) (*models.Question, error)
+	EditQuestion(id int,  content string, questionType string, weight int) (*models.Question, error)
 	DeleteQuestion(id int) error
 }
 
@@ -30,7 +31,7 @@ func (r *repository) GetAllQuestions(tryoutID int) ([]*models.Question, error) {
 	return questions, nil
 }
 
-func (r *repository) CreateQuestion(number int, content string, tryoutID int, questionType string) (*models.Question, error) {
+func (r *repository) CreateQuestion( content string, tryoutID int, questionType string, weight int) (*models.Question, error) {
 	var submission models.Submission
 	err := r.DB.Where("tryout_id = ?", tryoutID).First(&submission).Error
 	if err == nil {
@@ -38,10 +39,10 @@ func (r *repository) CreateQuestion(number int, content string, tryoutID int, qu
 	}
 
 	question := &models.Question{
-		Number:      number,
-		Content:     content,
-		TryoutID:    tryoutID,
+		Content:      content,
+		TryoutID:     tryoutID,
 		QuestionType: questionType,
+		Weight:       weight,
 	}
 	if err := r.DB.Create(question).Error; err != nil {
 		return nil, err
@@ -49,7 +50,7 @@ func (r *repository) CreateQuestion(number int, content string, tryoutID int, qu
 	return question, nil
 }
 
-func (r *repository) EditQuestion(id int, number int, content string, questionType string) (*models.Question, error) {
+func (r *repository) EditQuestion(id int, content string, questionType string, weight int) (*models.Question, error) {
 	var question models.Question
 	err := r.DB.First(&question, id).Error
 	if err != nil {
@@ -62,9 +63,10 @@ func (r *repository) EditQuestion(id int, number int, content string, questionTy
 		return nil, fmt.Errorf("cannot edit question for tryout that already has a submission")
 	}
 
-	question.Number = number
+	
 	question.Content = content
 	question.QuestionType = questionType
+	question.Weight = weight
 	if err := r.DB.Save(&question).Error; err != nil {
 		return nil, err
 	}

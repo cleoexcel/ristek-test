@@ -4,12 +4,12 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	
-	"github.com/cleoexcel/ristek-test/middleware"
+
 	"github.com/cleoexcel/ristek-test/app/auth"
-	"github.com/cleoexcel/ristek-test/config"
-	"github.com/cleoexcel/ristek-test/app/tryout"
 	"github.com/cleoexcel/ristek-test/app/question"
+	"github.com/cleoexcel/ristek-test/app/tryout"
+	"github.com/cleoexcel/ristek-test/config"
+	"github.com/cleoexcel/ristek-test/middleware"
 )
 
 var db *gorm.DB
@@ -17,7 +17,12 @@ var db *gorm.DB
 func main() {
 	db = config.InitDatabase()
 	r := gin.Default()
-	r.Use(cors.Default())
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
 
 	repo := auth.NewRepository(db)
 	service := auth.NewAuthService(repo)

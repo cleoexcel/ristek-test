@@ -5,9 +5,9 @@ import (
 )
 
 type QuestionService interface {
-	CreateQuestion(number int, content string, tryoutID int, questionType string) error
+	CreateQuestion(content string, tryoutID int, questionType string, weight int) error
 	GetAllQuestions(tryoutID int) ([]*models.Question, error)
-	EditQuestion(id int, number int, content string, questionType string) (*models.Question, error)
+	EditQuestion(id int, content string, questionType string, weight int) (*models.Question, error)
 	DeleteQuestion(id int) error
 }
 
@@ -19,8 +19,8 @@ func NewQuestionService(repo Repository) QuestionService {
 	return &questionService{repo}
 }
 
-func (s *questionService) CreateQuestion(number int, content string, tryoutID int, questionType string) error {
-	_, err := s.repo.CreateQuestion(number, content, tryoutID, questionType)
+func (s *questionService) CreateQuestion(content string, tryoutID int, questionType string, weight int) error {
+	_, err := s.repo.CreateQuestion(content, tryoutID, questionType, weight)
 	if err != nil {
 		return err
 	}
@@ -31,8 +31,8 @@ func (s *questionService) GetAllQuestions(tryoutID int) ([]*models.Question, err
 	return s.repo.GetAllQuestions(tryoutID)
 }
 
-func (s *questionService) EditQuestion(id int, number int, content string, questionType string) (*models.Question, error) {
-	return s.repo.EditQuestion(id, number, content, questionType)
+func (s *questionService) EditQuestion(id int, content string, questionType string, weight int) (*models.Question, error) {
+	return s.repo.EditQuestion(id, content, questionType, weight)
 }
 
 func (s *questionService) DeleteQuestion(id int) error {

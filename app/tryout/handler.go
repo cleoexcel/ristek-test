@@ -50,17 +50,32 @@ func (h *TryoutHandler) CreateTryout(c *gin.Context) {
 }
 
 func (h *TryoutHandler) GetAllTryout(c *gin.Context) {
-	title := c.DefaultQuery("title", "")
-	category := c.DefaultQuery("category", "")
-	createdAt := c.DefaultQuery("date", "")
-
-	tryouts, err := h.service.GetAllTryout(title, category, createdAt)
+	userId, err := strconv.Atoi(middleware.ExtractUserID(c))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tryouts"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"tryouts": tryouts})
+
+    title := c.DefaultQuery("title", "")
+    category := c.DefaultQuery("category", "")
+    createdAt := c.DefaultQuery("date", "")
+
+    isByUser := c.DefaultQuery("is_by_user", "false")
+
+    if isByUser == "false" {
+         userId = 0
+    }
+
+    tryouts, err := h.service.GetAllTryout(title, category, createdAt, userId)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tryouts"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"tryouts": tryouts})
 }
+
+
 
 func (h *TryoutHandler) GetDetailTryout(c *gin.Context) {
 	idString := c.Param("id")

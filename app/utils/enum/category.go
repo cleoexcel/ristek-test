@@ -16,7 +16,7 @@ func IsValidCategory(category string) bool {
 func IsValidQuestionType(questionType string) bool {
     switch questionType {
     case
-        "T/F",
+        "Truefalse",
         "Multiple Choice",
         "Short Answer":
             return true
