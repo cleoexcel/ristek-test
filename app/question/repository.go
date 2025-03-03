@@ -7,37 +7,31 @@ import (
 	"gorm.io/gorm"
 )
 
-type Repository interface {
-	GetAllQuestions(tryoutID int) ([]*models.Question, error)
-	CreateQuestion( content string, tryoutID int, questionType string, weight int) (*models.Question, error)
-	EditQuestion(id int,  content string, questionType string, weight int) (*models.Question, error)
-	DeleteQuestion(id int) error
-}
-
-type repository struct {
+type QuestionRepository struct {
 	DB *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) Repository {
-	return &repository{DB: db}
+func NewQuestionRepository(db *gorm.DB) *QuestionRepository {
+	return &QuestionRepository{DB: db}
 }
 
-func (r *repository) GetAllQuestions(tryoutID int) ([]*models.Question, error) {
+func (r *QuestionRepository) GetAllQuestions(tryoutID int) ([]*models.Question, error) {
 	var questions []*models.Question
-	err := r.DB.Where("tryout_id = ?", tryoutID).Find(&questions).Error
-	if err != nil {
-		return nil, err
-	}
-	return questions, nil
+	err := r.DB.
+		Preload("ShortAnswer").
+		Preload("TrueFalse").
+		Where("tryout_id = ?", tryoutID).
+		Find(&questions).
+		Error
+	return questions, err
 }
 
-func (r *repository) CreateQuestion( content string, tryoutID int, questionType string, weight int) (*models.Question, error) {
+func (r *QuestionRepository) CreateQuestion(content string, tryoutID int, questionType string, weight int) (*models.Question, error) {
 	var submission models.Submission
 	err := r.DB.Where("tryout_id = ?", tryoutID).First(&submission).Error
 	if err == nil {
 		return nil, fmt.Errorf("tryout already has a submission, cannot add or edit questions")
 	}
-
 	question := &models.Question{
 		Content:      content,
 		TryoutID:     tryoutID,
@@ -50,7 +44,7 @@ func (r *repository) CreateQuestion( content string, tryoutID int, questionType 
 	return question, nil
 }
 
-func (r *repository) EditQuestion(id int, content string, questionType string, weight int) (*models.Question, error) {
+func (r *QuestionRepository) EditQuestion(id int, content string, questionType string, weight int) (*models.Question, error) {
 	var question models.Question
 	err := r.DB.First(&question, id).Error
 	if err != nil {
@@ -63,7 +57,6 @@ func (r *repository) EditQuestion(id int, content string, questionType string, w
 		return nil, fmt.Errorf("cannot edit question for tryout that already has a submission")
 	}
 
-	
 	question.Content = content
 	question.QuestionType = questionType
 	question.Weight = weight
@@ -74,7 +67,7 @@ func (r *repository) EditQuestion(id int, content string, questionType string, w
 	return &question, nil
 }
 
-func (r *repository) DeleteQuestion(id int) error {
+func (r *QuestionRepository) DeleteQuestion(id int) error {
 	var question models.Question
 	err := r.DB.First(&question, id).Error
 	if err != nil {

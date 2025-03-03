@@ -1,40 +1,45 @@
 package question
 
 import (
+	"github.com/cleoexcel/ristek-test/app/answer"
 	"github.com/cleoexcel/ristek-test/app/models"
 )
 
-type QuestionService interface {
-	CreateQuestion(content string, tryoutID int, questionType string, weight int) error
-	GetAllQuestions(tryoutID int) ([]*models.Question, error)
-	EditQuestion(id int, content string, questionType string, weight int) (*models.Question, error)
-	DeleteQuestion(id int) error
+type QuestionService struct {
+	Repo          *QuestionRepository
+	AnswerService *answer.AnswerService
 }
 
-type questionService struct {
-	repo Repository
+func NewQuestionService(repo *QuestionRepository, answerService *answer.AnswerService) *QuestionService {
+	return &QuestionService{Repo: repo, AnswerService: answerService}
 }
 
-func NewQuestionService(repo Repository) QuestionService {
-	return &questionService{repo}
+func (s *QuestionService) GetAllQuestions(tryoutID int) ([]*models.Question, error) {
+	return s.Repo.GetAllQuestions(tryoutID)
 }
 
-func (s *questionService) CreateQuestion(content string, tryoutID int, questionType string, weight int) error {
-	_, err := s.repo.CreateQuestion(content, tryoutID, questionType, weight)
+func (s *QuestionService) CreateQuestion(content string, tryoutID int, questionType string, weight int, expectAnswer interface{}) (*models.Question, error) {
+	question, err := s.Repo.CreateQuestion(content, tryoutID, questionType, weight)
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.AnswerService.CreateAnswer(question.ID, questionType, expectAnswer)
+	if err != nil {
+		return nil, err
+	}
+	return question, nil
+}
+
+
+func (s *QuestionService) EditQuestion(id int, content string, questionType string, weight int, expectAnswer interface{}) error {
+	_, err := s.Repo.EditQuestion(id, content, questionType, weight)
 	if err != nil {
 		return err
 	}
-	return nil
+	_, err = s.AnswerService.UpdateAnswer(id, questionType, expectAnswer)
+	return err
 }
 
-func (s *questionService) GetAllQuestions(tryoutID int) ([]*models.Question, error) {
-	return s.repo.GetAllQuestions(tryoutID)
-}
-
-func (s *questionService) EditQuestion(id int, content string, questionType string, weight int) (*models.Question, error) {
-	return s.repo.EditQuestion(id, content, questionType, weight)
-}
-
-func (s *questionService) DeleteQuestion(id int) error {
-	return s.repo.DeleteQuestion(id)
+func (s *QuestionService) DeleteQuestion(id int) error {
+	return s.Repo.DeleteQuestion(id)
 }

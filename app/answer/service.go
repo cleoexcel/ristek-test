@@ -1,47 +1,45 @@
 package answer
 
 import (
-	"github.com/cleoexcel/ristek-test/app/models"
+	
+	"log"
 )
 
-type Service interface {
-	CreateTruefalseAnswer(questionID int, expectAnswer bool) (*models.Truefalse, error)
-	CreateShortanswerAnswer(questionID int, expectAnswer string) (*models.Shortanswer, error)
-	GetAllAnswers() ([]*models.Truefalse, []*models.Shortanswer, error)
-	EditTruefalseAnswer(id int, expectAnswer bool) (*models.Truefalse, error)
-	EditShortanswerAnswer(id int, expectAnswer string) (*models.Shortanswer, error)
-	DeleteAnswer(id int) error
-	
+type AnswerService struct {
+	Repo *AnswerRepository
 }
 
-type answerService struct {
-	repo Repository
+func NewAnswerService(repo *AnswerRepository) *AnswerService {
+	return &AnswerService{Repo: repo}
 }
 
-func NewAnswerService(repo Repository) Service {
-	return &answerService{repo}
+func (s *AnswerService) GetAllAnswers() (interface{}, error) {
+	return s.Repo.GetAllAnswers()
 }
 
-func (s *answerService) CreateTruefalseAnswer(questionID int, expectAnswer bool) (*models.Truefalse, error) {
-	return s.repo.CreateTruefalseAnswer(questionID, expectAnswer)
+func (s *AnswerService) CreateAnswer(questionID int, questionType string, expectAnswer interface{}) (interface{}, error) {
+	answer, err := s.Repo.CreateAnswer(questionID, questionType, expectAnswer)
+	if err != nil {
+		log.Printf("Error creating answer: %v", err)
+		return nil, err
+	}
+	return answer, nil
 }
 
-func (s *answerService) CreateShortanswerAnswer(questionID int, expectAnswer string) (*models.Shortanswer, error) {
-	return s.repo.CreateShortanswerAnswer(questionID, expectAnswer)
+func (s *AnswerService) UpdateAnswer(questionID int, questionType string, expectAnswer interface{}) (interface{}, error) {
+	answer, err := s.Repo.UpdateAnswer(questionID, questionType, expectAnswer)
+	if err != nil {
+		log.Printf("Error updating answer: %v", err)
+		return nil, err
+	}
+	return answer, nil
 }
 
-func (s *answerService) GetAllAnswers() ([]*models.Truefalse, []*models.Shortanswer, error) {
-	return s.repo.GetAllAnswers()
-}
-
-func (s *answerService) EditTruefalseAnswer(id int, expectAnswer bool) (*models.Truefalse, error) {
-	return s.repo.EditTruefalseAnswer(id, expectAnswer)
-}
-
-func (s *answerService) EditShortanswerAnswer(id int, expectAnswer string) (*models.Shortanswer, error) {
-	return s.repo.EditShortanswerAnswer(id, expectAnswer)
-}
-
-func (s *answerService) DeleteAnswer(id int) error {
-	return s.repo.DeleteAnswer(id)
+func (s *AnswerService) DeleteAnswer(questionID int, questionType string) error {
+	err := s.Repo.DeleteAnswer(questionID, questionType)
+	if err != nil {
+		log.Printf("Error deleting answer: %v", err)
+		return err
+	}
+	return nil
 }

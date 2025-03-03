@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	"github.com/cleoexcel/ristek-test/app/answer"
 	"github.com/cleoexcel/ristek-test/app/auth"
 	"github.com/cleoexcel/ristek-test/app/question"
 	"github.com/cleoexcel/ristek-test/app/tryout"
@@ -44,9 +45,11 @@ func main() {
 	r.PATCH("/tryout/edit-tryout/:id", tryouthandler.EditTryout)
 	r.DELETE("/tryout/delete-tryout/:id", tryouthandler.DeleteTryoutById)
 
-	questionrepo := question.NewRepository(db)
-	questionservice := question.NewQuestionService(questionrepo)
-	questionhandler := question.NewQuestionHandler(questionservice, questionrepo)
+	questionrepo := question.NewQuestionRepository(db)
+	answerrepo := answer.NewAnswerRepository(db)
+	answerservice := answer.NewAnswerService(answerrepo)
+	questionservice := question.NewQuestionService(questionrepo, answerservice)
+	questionhandler := question.NewQuestionHandler(questionservice)
 
 	r.POST("/question/create-question", questionhandler.CreateQuestion)
 	r.GET("/question/get-all-question/:id", questionhandler.GetAllQuestions)
