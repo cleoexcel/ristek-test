@@ -42,9 +42,9 @@ func main() {
 
 	r.POST("/tryout/create-tryout", tryouthandler.CreateTryout)
 	r.GET("/tryout/get-all-tryout", tryouthandler.GetAllTryout)
-	r.GET("/tryout/get-detail-tryout/:id", tryouthandler.GetDetailTryout)
-	r.PATCH("/tryout/edit-tryout/:id", tryouthandler.EditTryout)
-	r.DELETE("/tryout/delete-tryout/:id", tryouthandler.DeleteTryoutById)
+	r.GET("/tryout/get-detail-tryout/:id", tryouthandler.GetDetailTryoutByTryoutID)
+	r.PATCH("/tryout/edit-tryout/:id", tryouthandler.EditTryoutByTryoutID)
+	r.DELETE("/tryout/delete-tryout/:id", tryouthandler.DeleteTryoutByTryoutID)
 
 	questionrepo := question.NewQuestionRepository(db)
 	answerrepo := answer.NewAnswerRepository(db)
@@ -53,9 +53,9 @@ func main() {
 	questionhandler := question.NewQuestionHandler(questionservice)
 
 	r.POST("/question/create-question", questionhandler.CreateQuestion)
-	r.GET("/question/get-all-question/:id", questionhandler.GetAllQuestions)
-	r.PATCH("/question/edit-question/:id", questionhandler.EditQuestion)
-	r.DELETE("/question/delete-question/:id", questionhandler.DeleteQuestion)
+	r.GET("/question/get-all-question/:id", questionhandler.GetAllQuestionsByTryoutID)
+	r.PATCH("/question/edit-question/:id", questionhandler.EditQuestionByQuestionID)
+	r.DELETE("/question/delete-question/:id", questionhandler.DeleteQuestionByQuestionID)
 
 	submissionrepo := submission.NewSubmissionRepository(db)
 	submissionservice := submission.NewSubmissionService(submissionrepo)
@@ -64,6 +64,7 @@ func main() {
 	r.POST("/submission/create", submissionhandler.CreateSubmission)
 	r.GET("/submission/get-submission/:id", submissionhandler.GetSubmissionByTryoutID)
 	r.GET("/submission/get-all-answer/:id", submissionhandler.GetAllAnswerBySubmissionID)
+	r.GET("/submission/calculate-score/:id", submissionhandler.CalculateScoreBySubmissionID)
 
 	r.Run(":8080")
 }

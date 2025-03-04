@@ -10,6 +10,7 @@ type Submission struct {
 	UserID          int       `json:"user_id"`
 	NumberOfAttempt int       `json:"number_of_attempt"`
 	CreatedAt       time.Time `json:"created_at" gorm:"autoCreateTime"`
+	TotalScore      int       `json:"total_score" gorm:"default:0"`
 
 	Tryout Tryout `json:"tryout" gorm:"foreignKey:TryoutID"`
 }

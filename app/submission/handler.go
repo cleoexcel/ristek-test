@@ -88,3 +88,22 @@ func (h *SubmissionHandler) GetAllAnswerBySubmissionID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"answers": answers})
 }
+
+func (h *SubmissionHandler) CalculateScoreBySubmissionID(c *gin.Context) {
+	submissionID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Submission ID"})
+		return
+	}
+
+	score, err := h.service.CalculateScoreBySubmissionID(submissionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to calculate score"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Score calculated successfully",
+		"total_score": score,
+	})
+}

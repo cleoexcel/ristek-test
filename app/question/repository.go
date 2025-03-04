@@ -15,7 +15,7 @@ func NewQuestionRepository(db *gorm.DB) *QuestionRepository {
 	return &QuestionRepository{DB: db}
 }
 
-func (r *QuestionRepository) GetAllQuestions(tryoutID int) ([]*models.Question, error) {
+func (r *QuestionRepository) GetAllQuestionsByTryoutID(tryoutID int) ([]*models.Question, error) {
 	var questions []*models.Question
 	err := r.DB.
 		Preload("ShortAnswer").
@@ -32,7 +32,23 @@ func (r *QuestionRepository) CreateQuestion(content string, tryoutID int, questi
 	if err == nil {
 		return nil, fmt.Errorf("tryout already has a submission, cannot add or edit questions")
 	}
+
+	var lastQuestion models.Question
+	var newNumber int
+
+	err = r.DB.Where("tryout_id = ?", tryoutID).Order("number DESC").First(&lastQuestion).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			newNumber = 1
+		} else {
+			return nil, err
+		}
+	} else {
+		newNumber = lastQuestion.Number + 1
+	}
+
 	question := &models.Question{
+		Number:       newNumber,
 		Content:      content,
 		TryoutID:     tryoutID,
 		QuestionType: questionType,
@@ -44,7 +60,7 @@ func (r *QuestionRepository) CreateQuestion(content string, tryoutID int, questi
 	return question, nil
 }
 
-func (r *QuestionRepository) EditQuestion(id int, content string, questionType string, weight int) (*models.Question, error) {
+func (r *QuestionRepository) EditQuestionByQuestionID(id int, content string, questionType string, weight int) (*models.Question, error) {
 	var question models.Question
 	err := r.DB.First(&question, id).Error
 	if err != nil {
@@ -67,7 +83,7 @@ func (r *QuestionRepository) EditQuestion(id int, content string, questionType s
 	return &question, nil
 }
 
-func (r *QuestionRepository) DeleteQuestion(id int) error {
+func (r *QuestionRepository) DeleteQuestionByQuestionID(id int) error {
 	var question models.Question
 	err := r.DB.First(&question, id).Error
 	if err != nil {

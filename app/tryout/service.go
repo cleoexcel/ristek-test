@@ -7,9 +7,9 @@ import (
 type TryoutService interface {
 	CreateTryout(title, description string, userId int, category string) (*models.Tryout, error)
 	GetAllTryout(title string, category string, createdAt string, userId int) ([]*models.Tryout, error)
-	GetDetailTryout(id int) (*models.Tryout, error)
-	EditTryout(id int, title, description string, userId int) (*models.Tryout, error)
-	DeleteTryoutById(id int) error
+	GetDetailTryoutByTryoutID(id int) (*models.Tryout, error)
+	EditTryoutByTryoutID(id int, title, description string, userId int) (*models.Tryout, error)
+	DeleteTryoutByTryoutID(id int) error
 }
 
 type tryoutService struct {
@@ -29,17 +29,17 @@ func (s *tryoutService) CreateTryout(title, description string, userId int, cate
 }
 
 func (s *tryoutService) GetAllTryout(title string, category string, createdAt string, userId int) ([]*models.Tryout, error) {
-    return s.repo.GetAllTryout(title, category, createdAt, userId)
+	return s.repo.GetAllTryout(title, category, createdAt, userId)
 }
 
-func (s *tryoutService) GetDetailTryout(id int) (*models.Tryout, error) {
-	return s.repo.GetDetailTryout(id)
+func (s *tryoutService) GetDetailTryoutByTryoutID(id int) (*models.Tryout, error) {
+	return s.repo.GetDetailTryoutByTryoutID(id)
 }
 
-func (s *tryoutService) EditTryout(id int, title, description string, userId int) (*models.Tryout, error) {
-	return s.repo.EditTryout(id, title, description, userId)
+func (s *tryoutService) EditTryoutByTryoutID(id int, title, description string, userId int) (*models.Tryout, error) {
+	return s.repo.EditTryoutByTryoutID(id, title, description, userId)
 }
 
-func (s *tryoutService) DeleteTryoutById(id int) error {
-	return s.repo.DeleteTryoutById(id)
+func (s *tryoutService) DeleteTryoutByTryoutID(id int) error {
+	return s.repo.DeleteTryoutByTryoutID(id)
 }

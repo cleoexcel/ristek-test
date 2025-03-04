@@ -14,8 +14,8 @@ func NewQuestionService(repo *QuestionRepository, answerService *answer.AnswerSe
 	return &QuestionService{Repo: repo, AnswerService: answerService}
 }
 
-func (s *QuestionService) GetAllQuestions(tryoutID int) ([]*models.Question, error) {
-	return s.Repo.GetAllQuestions(tryoutID)
+func (s *QuestionService) GetAllQuestionsByTryoutID(tryoutID int) ([]*models.Question, error) {
+	return s.Repo.GetAllQuestionsByTryoutID(tryoutID)
 }
 
 func (s *QuestionService) CreateQuestion(content string, tryoutID int, questionType string, weight int, expectAnswer interface{}) (*models.Question, error) {
@@ -30,9 +30,8 @@ func (s *QuestionService) CreateQuestion(content string, tryoutID int, questionT
 	return question, nil
 }
 
-
-func (s *QuestionService) EditQuestion(id int, content string, questionType string, weight int, expectAnswer interface{}) error {
-	_, err := s.Repo.EditQuestion(id, content, questionType, weight)
+func (s *QuestionService) EditQuestionByQuestionID(id int, content string, questionType string, weight int, expectAnswer interface{}) error {
+	_, err := s.Repo.EditQuestionByQuestionID(id, content, questionType, weight)
 	if err != nil {
 		return err
 	}
@@ -40,6 +39,6 @@ func (s *QuestionService) EditQuestion(id int, content string, questionType stri
 	return err
 }
 
-func (s *QuestionService) DeleteQuestion(id int) error {
-	return s.Repo.DeleteQuestion(id)
+func (s *QuestionService) DeleteQuestionByQuestionID(id int) error {
+	return s.Repo.DeleteQuestionByQuestionID(id)
 }

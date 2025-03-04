@@ -1,10 +1,11 @@
 package question
 
 import (
-	
 	"net/http"
 	"strconv"
+
 	"github.com/cleoexcel/ristek-test/app/models"
+	"github.com/cleoexcel/ristek-test/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,14 +17,14 @@ func NewQuestionHandler(service *QuestionService) *QuestionHandler {
 	return &QuestionHandler{Service: service}
 }
 
-func (h *QuestionHandler) GetAllQuestions(c *gin.Context) {
+func (h *QuestionHandler) GetAllQuestionsByTryoutID(c *gin.Context) {
 	tryoutID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tryout ID"})
 		return
 	}
 
-	questions, err := h.Service.GetAllQuestions(tryoutID)
+	questions, err := h.Service.GetAllQuestionsByTryoutID(tryoutID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch questions"})
 		return
@@ -33,6 +34,12 @@ func (h *QuestionHandler) GetAllQuestions(c *gin.Context) {
 }
 
 func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
+	userID, err := strconv.Atoi(middleware.ExtractUserID(c))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	var input struct {
 		Content      string      `json:"content"`
 		TryoutID     int         `json:"tryout_id"`
@@ -43,6 +50,17 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var tryout models.Tryout
+	if err := h.Service.Repo.DB.First(&tryout, input.TryoutID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Tryout not found"})
+		return
+	}
+
+	if tryout.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to create this question"})
 		return
 	}
 
@@ -59,16 +77,39 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Question and answer created successfully",
+		"message":  "Question and answer created successfully",
 		"question": question,
-		"answer": answer,
+		"answer":   answer,
 	})
 }
 
-func (h *QuestionHandler) EditQuestion(c *gin.Context) {
+func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
+	userID, err := strconv.Atoi(middleware.ExtractUserID(c))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	questionID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid question ID"})
+		return
+	}
+
+	var question models.Question
+	if err := h.Service.Repo.DB.First(&question, questionID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
+		return
+	}
+
+	var tryout models.Tryout
+	if err := h.Service.Repo.DB.First(&tryout, question.TryoutID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Tryout not found"})
+		return
+	}
+
+	if tryout.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to edit this question"})
 		return
 	}
 
@@ -84,7 +125,7 @@ func (h *QuestionHandler) EditQuestion(c *gin.Context) {
 		return
 	}
 
-	err = h.Service.EditQuestion(questionID, input.Content, input.QuestionType, input.Weight, input.ExpectAnswer)
+	err = h.Service.EditQuestionByQuestionID(questionID, input.Content, input.QuestionType, input.Weight, input.ExpectAnswer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -98,12 +139,17 @@ func (h *QuestionHandler) EditQuestion(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Question and answer updated successfully",
-		"answer": answer,
+		"answer":  answer,
 	})
 }
 
+func (h *QuestionHandler) DeleteQuestionByQuestionID(c *gin.Context) {
+	userID, err := strconv.Atoi(middleware.ExtractUserID(c))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 
-func (h *QuestionHandler) DeleteQuestion(c *gin.Context) {
 	questionID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid question ID"})
@@ -116,20 +162,27 @@ func (h *QuestionHandler) DeleteQuestion(c *gin.Context) {
 		return
 	}
 
+	var tryout models.Tryout
+	if err := h.Service.Repo.DB.First(&tryout, question.TryoutID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Tryout not found"})
+		return
+	}
+
+	if tryout.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to delete this question"})
+		return
+	}
+
 	questionType := question.QuestionType
-	
 	err = h.Service.AnswerService.DeleteAnswer(questionID, questionType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete answer"})
 		return
 	}
-	err = h.Service.DeleteQuestion(questionID)
+	err = h.Service.DeleteQuestionByQuestionID(questionID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Question and answer deleted successfully"})
 }
-
-
-

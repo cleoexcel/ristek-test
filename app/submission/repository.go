@@ -13,6 +13,7 @@ type SubmissionRepository interface {
 	GetSubmissionByTryoutID(tryoutID int) ([]models.Submission, error)
 	CreateSubmissionAnswer(submissionID int, questionID int, submittedAnswer interface{}) (interface{}, error)
 	GetAllAnswersBySubmissionID(submissionID int) ([]interface{}, error)
+	CalculateScoreBySubmissionID(submissionID int) (int, error)
 }
 
 type submissionRepository struct {
@@ -128,8 +129,6 @@ func (r *submissionRepository) GetAllAnswersBySubmissionID(submissionID int) ([]
 		return nil, err
 	}
 
-	fmt.Println("trufalse", trueFalseAnswers)
-	fmt.Println("shortans", shortAnswers)
 	for _, answer := range trueFalseAnswers {
 		answers = append(answers, answer)
 	}
@@ -138,4 +137,47 @@ func (r *submissionRepository) GetAllAnswersBySubmissionID(submissionID int) ([]
 	}
 
 	return answers, nil
+}
+
+func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (int, error) {
+	var submission models.Submission
+	if err := r.DB.First(&submission, submissionID).Error; err != nil {
+		return 0, err
+	}
+
+	answers, err := r.GetAllAnswersBySubmissionID(submissionID)
+	if err != nil {
+		return 0, err
+	}
+
+	totalScore := 0
+
+	for _, answer := range answers {
+		switch ans := answer.(type) {
+		case models.SubmissionAnswerTrueFalse:
+			var correctAnswer models.TrueFalse
+			if err := r.DB.Where("question_id = ?", ans.QuestionID).First(&correctAnswer).Error; err != nil {
+				continue
+			}
+			if ans.AnswerSubmitted == correctAnswer.ExpectAnswer {
+				totalScore += ans.Question.Weight
+			}
+
+		case models.SubmissionAnswerShortAnswer:
+			var correctAnswer models.ShortAnswer
+			if err := r.DB.Where("question_id = ?", ans.QuestionID).First(&correctAnswer).Error; err != nil {
+				continue
+			}
+			if ans.AnswerSubmitted == correctAnswer.ExpectAnswer {
+				totalScore += ans.Question.Weight
+			}
+		}
+	}
+
+	submission.TotalScore = totalScore
+	if err := r.DB.Save(&submission).Error; err != nil {
+		return 0, err
+	}
+
+	return totalScore, nil
 }

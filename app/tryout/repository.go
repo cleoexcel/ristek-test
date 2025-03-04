@@ -11,9 +11,9 @@ import (
 type Repository interface {
 	CreateTryout(title, description string, userId int, category string) (*models.Tryout, error)
 	GetAllTryout(title string, category string, createdAt string, userId int) ([]*models.Tryout, error)
-	GetDetailTryout(id int) (*models.Tryout, error)
-	EditTryout(id int, title, description string, userId int) (*models.Tryout, error)
-	DeleteTryoutById(id int) error
+	GetDetailTryoutByTryoutID(id int) (*models.Tryout, error)
+	EditTryoutByTryoutID(id int, title, description string, userId int) (*models.Tryout, error)
+	DeleteTryoutByTryoutID(id int) error
 }
 
 type repository struct {
@@ -38,33 +38,33 @@ func (r *repository) CreateTryout(title, description string, userId int, categor
 }
 
 func (r *repository) GetAllTryout(title string, category string, createdAt string, userId int) ([]*models.Tryout, error) {
-    var tryouts []*models.Tryout
-    query := r.DB.Model(&models.Tryout{})
+	var tryouts []*models.Tryout
+	query := r.DB.Model(&models.Tryout{})
 
-    if title != "" {    
-        query = query.Where("title LIKE ?", "%"+title+"%")
-    }
+	if title != "" {
+		query = query.Where("title LIKE ?", "%"+title+"%")
+	}
 
-    if category != "" {    
-        query = query.Where("category LIKE ?", "%"+category+"%")
-    }
+	if category != "" {
+		query = query.Where("category LIKE ?", "%"+category+"%")
+	}
 
-    if createdAt != "" {
-        query = query.Where("DATE(created_at) = ?", createdAt)
-    }
+	if createdAt != "" {
+		query = query.Where("DATE(created_at) = ?", createdAt)
+	}
 
-    if userId > 0 {
-        query = query.Where("user_id = ?", userId)
-    }
+	if userId > 0 {
+		query = query.Where("user_id = ?", userId)
+	}
 
-    err := query.Find(&tryouts).Error
-    if err != nil {
-        return nil, err
-    }
-    return tryouts, nil
+	err := query.Find(&tryouts).Error
+	if err != nil {
+		return nil, err
+	}
+	return tryouts, nil
 }
 
-func (r *repository) GetDetailTryout(id int) (*models.Tryout, error) {
+func (r *repository) GetDetailTryoutByTryoutID(id int) (*models.Tryout, error) {
 	var tryout models.Tryout
 	err := r.DB.First(&tryout, id).Error
 	if err != nil {
@@ -73,7 +73,7 @@ func (r *repository) GetDetailTryout(id int) (*models.Tryout, error) {
 	return &tryout, nil
 }
 
-func (r *repository) EditTryout(id int, title, description string, userId int) (*models.Tryout, error) {
+func (r *repository) EditTryoutByTryoutID(id int, title, description string, userId int) (*models.Tryout, error) {
 	var tryout models.Tryout
 	err := r.DB.First(&tryout, id).Error
 	if err != nil {
@@ -95,7 +95,7 @@ func (r *repository) EditTryout(id int, title, description string, userId int) (
 	return &tryout, nil
 }
 
-func (r *repository) DeleteTryoutById(id int) error {
+func (r *repository) DeleteTryoutByTryoutID(id int) error {
 	var tryout models.Tryout
 	err := r.DB.First(&tryout, id).Error
 	if err != nil {

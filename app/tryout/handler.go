@@ -3,7 +3,7 @@ package tryout
 import (
 	"net/http"
 	"strconv"
-	
+
 	"github.com/cleoexcel/ristek-test/app/utils/enum"
 	"github.com/cleoexcel/ristek-test/middleware"
 	"github.com/gin-gonic/gin"
@@ -35,7 +35,7 @@ func (h *TryoutHandler) CreateTryout(c *gin.Context) {
 		return
 	}
 
-	if ! enum.IsValidCategory(input.Category) {
+	if !enum.IsValidCategory(input.Category) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Category is invalid"})
 		return
 	}
@@ -56,28 +56,26 @@ func (h *TryoutHandler) GetAllTryout(c *gin.Context) {
 		return
 	}
 
-    title := c.DefaultQuery("title", "")
-    category := c.DefaultQuery("category", "")
-    createdAt := c.DefaultQuery("date", "")
+	title := c.DefaultQuery("title", "")
+	category := c.DefaultQuery("category", "")
+	createdAt := c.DefaultQuery("date", "")
 
-    isByUser := c.DefaultQuery("is_by_user", "false")
+	isByUser := c.DefaultQuery("is_by_user", "false")
 
-    if isByUser == "false" {
-         userId = 0
-    }
+	if isByUser == "false" {
+		userId = 0
+	}
 
-    tryouts, err := h.service.GetAllTryout(title, category, createdAt, userId)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tryouts"})
-        return
-    }
+	tryouts, err := h.service.GetAllTryout(title, category, createdAt, userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tryouts"})
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{"tryouts": tryouts})
+	c.JSON(http.StatusOK, gin.H{"tryouts": tryouts})
 }
 
-
-
-func (h *TryoutHandler) GetDetailTryout(c *gin.Context) {
+func (h *TryoutHandler) GetDetailTryoutByTryoutID(c *gin.Context) {
 	idString := c.Param("id")
 
 	id, err := strconv.Atoi(idString)
@@ -85,7 +83,7 @@ func (h *TryoutHandler) GetDetailTryout(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tryout ID"})
 		return
 	}
-	tryout, err := h.service.GetDetailTryout(id)
+	tryout, err := h.service.GetDetailTryoutByTryoutID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Tryout not found"})
 		return
@@ -93,7 +91,7 @@ func (h *TryoutHandler) GetDetailTryout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"tryout": tryout})
 }
 
-func (h *TryoutHandler) EditTryout(c *gin.Context) {
+func (h *TryoutHandler) EditTryoutByTryoutID(c *gin.Context) {
 	idString := c.Param("id")
 	id, err := strconv.Atoi(idString)
 
@@ -119,7 +117,7 @@ func (h *TryoutHandler) EditTryout(c *gin.Context) {
 		return
 	}
 
-	tryout, err := h.service.EditTryout(id, input.Title, input.Description, userId)
+	tryout, err := h.service.EditTryoutByTryoutID(id, input.Title, input.Description, userId)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to edit this tryout"})
 		return
@@ -128,7 +126,7 @@ func (h *TryoutHandler) EditTryout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Tryout updated successfully", "tryout": tryout})
 }
 
-func (h *TryoutHandler) DeleteTryoutById(c *gin.Context) {
+func (h *TryoutHandler) DeleteTryoutByTryoutID(c *gin.Context) {
 	id := c.Param("id")
 	idUint, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
@@ -136,7 +134,7 @@ func (h *TryoutHandler) DeleteTryoutById(c *gin.Context) {
 		return
 	}
 
-	err = h.service.DeleteTryoutById(int(idUint))
+	err = h.service.DeleteTryoutByTryoutID(int(idUint))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "tryout not found"})
 		return

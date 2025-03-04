@@ -11,6 +11,5 @@ type SubmissionAnswerTrueFalse struct {
 	AnswerSubmitted bool      `json:"answer_submitted"`
 	CreatedAt       time.Time `json:"created_at" gorm:"autoCreateTime"`
 
-	Submission Submission `json:"submission" gorm:"foreignKey:SubmissionId;references:ID"`
 	Question   Question   `json:"question" gorm:"foreignKey:QuestionID;references:ID"`
 }
