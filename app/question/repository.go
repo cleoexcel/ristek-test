@@ -86,3 +86,12 @@ func (r *QuestionRepository) DeleteQuestion(id int) error {
 	}
 	return nil
 }
+
+func (r *QuestionRepository) GetQuestionByID(id int) (*models.Question, error) {
+	var question models.Question
+	err := r.DB.First(&question, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &question, nil
+}

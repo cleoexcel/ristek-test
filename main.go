@@ -63,6 +63,7 @@ func main() {
 
 	r.POST("/submission/create", submissionhandler.CreateSubmission)
 	r.GET("/submission/get-submission/:id", submissionhandler.GetSubmissionByTryoutID)
+	r.GET("/submission/get-all-answer/:id", submissionhandler.GetAllAnswerBySubmissionID)
 
 	r.Run(":8080")
 }

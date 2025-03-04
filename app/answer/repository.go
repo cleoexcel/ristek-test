@@ -39,28 +39,28 @@ func (r *AnswerRepository) CreateAnswer(questionID int, questionType string, exp
 	}
 
 	switch questionType {
-	case "ShortAnswer":
-		answer := &models.ShortAnswer{
-			QuestionID:   questionID,
-			ExpectAnswer: expectAnswer.(string),
-		}
-		if err := r.DB.Create(answer).Error; err != nil {
-			return nil, err
-		}
-		return answer, nil
+		case "ShortAnswer":
+			answer := &models.ShortAnswer{
+				QuestionID:   questionID,
+				ExpectAnswer: expectAnswer.(string),
+			}
+			if err := r.DB.Create(answer).Error; err != nil {
+				return nil, err
+			}
+			return answer, nil
 
-	case "TrueFalse":
-		answer := &models.TrueFalse{
-			QuestionID:   questionID,
-			ExpectAnswer: expectAnswer.(bool),
-		}
-		if err := r.DB.Create(answer).Error; err != nil {
-			return nil, err
-		}
-		return answer, nil
+		case "TrueFalse":
+			answer := &models.TrueFalse{
+				QuestionID:   questionID,
+				ExpectAnswer: expectAnswer.(bool),
+			}
+			if err := r.DB.Create(answer).Error; err != nil {
+				return nil, err
+			}
+			return answer, nil
 
-	default:
-		return nil, errors.New("invalid question type")
+		default:
+			return nil, errors.New("invalid question type")
 	}
 }
 

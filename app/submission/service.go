@@ -6,7 +6,9 @@ import (
 
 type SubmissionService interface {
 	CreateSubmission(tryoutID int, userID int) (*models.Submission, error)
-	GetSubmissionByTryoutID(tryoutID int) (*models.Submission, error)
+	GetSubmissionByTryoutID(tryoutID int) ([]models.Submission, error)
+	CreateSubmissionAnswer(submissionID int, questionID int, submitted_answer interface{}) (interface{}, error)
+	GetAllAnswersBySubmissionID(submissionID int) ([]interface{}, error)
 }
 
 type submissionService struct {
@@ -21,6 +23,14 @@ func (s *submissionService) CreateSubmission(tryoutID int, userID int) (*models.
 	return s.repo.CreateSubmission(tryoutID, userID)
 }
 
-func (s *submissionService) GetSubmissionByTryoutID(tryoutID int) (*models.Submission, error) {
+func (s *submissionService) CreateSubmissionAnswer(submissionID int, questionID int, submitted_answer interface{}) (interface{}, error) {
+	return s.repo.CreateSubmissionAnswer(submissionID, questionID, submitted_answer)
+}
+
+func (s *submissionService) GetSubmissionByTryoutID(tryoutID int) ([]models.Submission, error) {
 	return s.repo.GetSubmissionByTryoutID(tryoutID)
+}
+
+func (s *submissionService) GetAllAnswersBySubmissionID(submissionID int) ([]interface{}, error) {
+	return s.repo.GetAllAnswersBySubmissionID(submissionID)
 }
