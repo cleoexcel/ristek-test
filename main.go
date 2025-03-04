@@ -8,6 +8,7 @@ import (
 	"github.com/cleoexcel/ristek-test/app/answer"
 	"github.com/cleoexcel/ristek-test/app/auth"
 	"github.com/cleoexcel/ristek-test/app/question"
+	"github.com/cleoexcel/ristek-test/app/submission"
 	"github.com/cleoexcel/ristek-test/app/tryout"
 	"github.com/cleoexcel/ristek-test/config"
 	"github.com/cleoexcel/ristek-test/middleware"
@@ -55,6 +56,13 @@ func main() {
 	r.GET("/question/get-all-question/:id", questionhandler.GetAllQuestions)
 	r.PATCH("/question/edit-question/:id", questionhandler.EditQuestion)
 	r.DELETE("/question/delete-question/:id", questionhandler.DeleteQuestion)
+
+	submissionrepo := submission.NewSubmissionRepository(db)
+	submissionservice := submission.NewSubmissionService(submissionrepo)
+	submissionhandler := submission.NewSubmissionHandler(submissionservice)
+
+	r.POST("/submission/create", submissionhandler.CreateSubmission)
+	r.GET("/submission/get-submission/:id", submissionhandler.GetSubmissionByTryoutID)
 
 	r.Run(":8080")
 }
