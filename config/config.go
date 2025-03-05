@@ -39,8 +39,10 @@ func InitDatabase() (db *gorm.DB) {
 	db.AutoMigrate(&models.Submission{})
 	db.AutoMigrate(&models.TrueFalse{})
 	db.AutoMigrate(&models.ShortAnswer{})
+	db.AutoMigrate(&models.MultipleChoice{})
 	db.AutoMigrate(&models.SubmissionAnswerShortAnswer{})
 	db.AutoMigrate(&models.SubmissionAnswerTrueFalse{})
+	db.AutoMigrate(&models.SubmissionAnswerMultipleChoice{})
 
 	JWT_SECRET_KEY = os.Getenv("JWT_SECRET_KEY")
 	JWT_EXPIRY_IN_DAY, _ = strconv.Atoi(os.Getenv("JWT_EXPIRY_IN_DAYS"))

@@ -1,6 +1,7 @@
 package tryout
 
 import (
+
 	"net/http"
 	"strconv"
 
@@ -46,7 +47,7 @@ func (h *TryoutHandler) CreateTryout(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Tryout created successfully", "tryout": tryout})
+	c.JSON(http.StatusCreated, gin.H{"message": "Tryout created successfully", "tryout": tryout})
 }
 
 func (h *TryoutHandler) GetAllTryout(c *gin.Context) {
@@ -123,7 +124,7 @@ func (h *TryoutHandler) EditTryoutByTryoutID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Tryout updated successfully", "tryout": tryout})
+	c.JSON(http.StatusCreated, gin.H{"message": "Tryout updated successfully", "tryout": tryout})
 }
 
 func (h *TryoutHandler) DeleteTryoutByTryoutID(c *gin.Context) {
@@ -139,5 +140,5 @@ func (h *TryoutHandler) DeleteTryoutByTryoutID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "tryout not found"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Tryout deleted successfully"})
+	c.JSON(http.StatusNoContent, gin.H{"message": "Tryout deleted successfully"})
 }

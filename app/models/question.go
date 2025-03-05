@@ -17,4 +17,5 @@ type Question struct {
 
 	ShortAnswer *ShortAnswer `gorm:"foreignKey:QuestionID"`
 	TrueFalse   *TrueFalse   `gorm:"foreignKey:QuestionID"`
+	MultipleChoice *MultipleChoice `gorm:"foreignKey:QuestionID"`
 }

@@ -121,4 +121,3 @@ func (r *QuestionRepository) GetQuestionByID(id int) (*models.Question, error) {
 	}
 	return &question, nil
 }
-

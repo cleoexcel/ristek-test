@@ -2,7 +2,6 @@ package answer
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/cleoexcel/ristek-test/app/models"
 	"gorm.io/gorm"
@@ -140,8 +139,6 @@ func (r *AnswerRepository) DeleteAnswer(questionID int, questionType string) err
 	if questionID <= 0 {
 		return errors.New("invalid question ID")
 	}
-	fmt.Println("Question Type:", questionType)
-
 	switch questionType {
 	case "ShortAnswer":
 		
@@ -154,8 +151,6 @@ func (r *AnswerRepository) DeleteAnswer(questionID int, questionType string) err
 			return err
 		}
 	default:
-		fmt.Println("Invalid question type:", questionType)
-		fmt.Println("salaaahhh")
 		return errors.New("invalid question type")
 	}
 	return nil

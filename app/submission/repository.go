@@ -56,13 +56,10 @@ func (r *submissionRepository) CreateSubmissionAnswer(submissionID int, question
 
 	question, err := r.QuestionRepo.GetQuestionByID(questionID)
 	if err != nil {
-		fmt.Println("Error fetching question:", err)
 		return nil, err
 	}
-	fmt.Println("Question found:", question)
 
 	questionType := question.QuestionType
-	fmt.Println("Question Type:", questionType)
 
 	if questionType == "TrueFalse" {
 		submissionAnswerTF := &models.SubmissionAnswerTrueFalse{
@@ -72,13 +69,10 @@ func (r *submissionRepository) CreateSubmissionAnswer(submissionID int, question
 		}
 
 		if err := r.DB.Create(submissionAnswerTF).Error; err != nil {
-			fmt.Println("Error inserting TrueFalse Answer:", err)
 			return nil, err
 		}
-		fmt.Println("Inserted TrueFalse Answer:", submissionAnswerTF)
 
 		if err := r.DB.Preload("Question").First(submissionAnswerTF, submissionAnswerTF.ID).Error; err != nil {
-			fmt.Println("Error preloading TrueFalse Answer:", err)
 			return nil, err
 		}
 
@@ -91,13 +85,11 @@ func (r *submissionRepository) CreateSubmissionAnswer(submissionID int, question
 		}
 
 		if err := r.DB.Create(submissionAnswerShortAns).Error; err != nil {
-			fmt.Println("Error inserting Short Answer:", err)
 			return nil, err
 		}
-		fmt.Println("Inserted Short Answer:", submissionAnswerShortAns)
+	
 
 		if err := r.DB.Preload("Question").First(submissionAnswerShortAns, submissionAnswerShortAns.ID).Error; err != nil {
-			fmt.Println("Error preloading Short Answer:", err)
 			return nil, err
 		}
 
@@ -188,6 +180,7 @@ func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (f
 			}
 		}
 	}
+
 
 	if totalWeight == 0 {
 		return 0, fmt.Errorf("total weight is zero, invalid scoring")

@@ -52,8 +52,8 @@ func main() {
 	questionservice := question.NewQuestionService(questionrepo, answerservice)
 	questionhandler := question.NewQuestionHandler(questionservice)
 
-	r.POST("/question/create-question/:id", questionhandler.CreateQuestion)
-	r.GET("/question/get-all-question/:id", questionhandler.GetAllQuestionsByTryoutID)
+	r.POST("/question/create-question/:tryoutId", questionhandler.CreateQuestion)
+	r.GET("/question/get-all-question/:tryoutId", questionhandler.GetAllQuestionsByTryoutID)
 	r.PATCH("/question/edit-question/:id", questionhandler.EditQuestionByQuestionID)
 	r.DELETE("/question/delete-question/:id", questionhandler.DeleteQuestionByQuestionID)
 
@@ -62,9 +62,9 @@ func main() {
 	submissionhandler := submission.NewSubmissionHandler(submissionservice)
 
 	r.POST("/submission/create", submissionhandler.CreateSubmission)
-	r.GET("/submission/get-submission/:id", submissionhandler.GetSubmissionByTryoutID)
-	r.GET("/submission/get-all-answer/:id", submissionhandler.GetAllAnswerBySubmissionID)
-	r.GET("/submission/calculate-score/:id", submissionhandler.CalculateScoreBySubmissionID)
+	r.GET("/submission/get-submission/:tryoutId", submissionhandler.GetSubmissionByTryoutID)
+	r.GET("/submission/get-all-answer/:submissionID", submissionhandler.GetAllAnswerBySubmissionID)
+	r.GET("/submission/calculate-score/:submissionID", submissionhandler.CalculateScoreBySubmissionID)
 
 	r.Run(":8080")
 }

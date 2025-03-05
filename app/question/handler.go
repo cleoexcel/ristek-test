@@ -18,7 +18,7 @@ func NewQuestionHandler(service *QuestionService) *QuestionHandler {
 }
 
 func (h *QuestionHandler) GetAllQuestionsByTryoutID(c *gin.Context) {
-	tryoutID, err := strconv.Atoi(c.Param("id"))
+	tryoutID, err := strconv.Atoi(c.Param("tryoutId"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tryout ID"})
 		return
@@ -40,7 +40,7 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 		return
 	}
 
-	tryoutID, err := strconv.Atoi(c.Param("id"))
+	tryoutID, err := strconv.Atoi(c.Param("tryoutId"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tryout ID"})
 		return
@@ -137,7 +137,7 @@ func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusCreated, gin.H{
 		"message": "Question and answer updated successfully",
 		"answer":  answer,
 	})
@@ -178,5 +178,5 @@ func (h *QuestionHandler) DeleteQuestionByQuestionID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Question and answer deleted successfully"})
+	c.JSON(http.StatusNoContent, gin.H{"message": "Question and answer deleted successfully"})
 }

@@ -23,10 +23,6 @@ func (s *QuestionService) CreateQuestion(content string, tryoutID int, questionT
 	if err != nil {
 		return nil, err
 	}
-	_, err = s.AnswerService.CreateAnswer(question.ID, questionType, expectAnswer)
-	if err != nil {
-		return nil, err
-	}
 	return question, nil
 }
 

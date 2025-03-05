@@ -43,7 +43,6 @@ func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("WOI ADA GA ", input.SubmittedAnswers)
 
 	for id2, submissionQuestion := range input.SubmittedAnswers {
 		submissionAnswer, err := h.service.CreateSubmissionAnswer(submission.ID, submissionQuestion.QuestionID, submissionQuestion.SubmittedAnswer)
@@ -54,11 +53,11 @@ func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Submission created successfully", "submission": submission})
+	c.JSON(http.StatusCreated, gin.H{"message": "Submission created successfully", "submission": submission})
 }
 
 func (h *SubmissionHandler) GetSubmissionByTryoutID(c *gin.Context) {
-	tryoutID, err := strconv.Atoi(c.Param("id"))
+	tryoutID, err := strconv.Atoi(c.Param("tryoutId"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tryout ID"})
 		return
@@ -74,7 +73,7 @@ func (h *SubmissionHandler) GetSubmissionByTryoutID(c *gin.Context) {
 }
 
 func (h *SubmissionHandler) GetAllAnswerBySubmissionID(c *gin.Context) {
-	submissionID, err := strconv.Atoi(c.Param("id"))
+	submissionID, err := strconv.Atoi(c.Param("submissionID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Submission ID"})
 		return
@@ -90,7 +89,7 @@ func (h *SubmissionHandler) GetAllAnswerBySubmissionID(c *gin.Context) {
 }
 
 func (h *SubmissionHandler) CalculateScoreBySubmissionID(c *gin.Context) {
-	submissionID, err := strconv.Atoi(c.Param("id"))
+	submissionID, err := strconv.Atoi(c.Param("submissionID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Submission ID"})
 		return
