@@ -89,18 +89,27 @@ func (r *AnswerRepository) GetAnswer(questionID int, questionType string) (inter
 	}
 }
 
-func (r *AnswerRepository) UpdateAnswer(questionID int, questionType string, expectAnswer interface{}) (interface{}, error) {
+func (r *AnswerRepository) UpdateAnswer(questionID int, expectAnswer interface{}) (interface{}, error) {
 	if questionID <= 0 {
 		return nil, errors.New("invalid question ID")
 	}
 
-	switch questionType {
+	var question models.Question
+	if err := r.DB.First(&question, questionID).Error; err != nil {
+		return nil, errors.New("question not found")
+	}
+
+	switch question.QuestionType { 
 	case "ShortAnswer":
 		var answer models.ShortAnswer
 		if err := r.DB.Where("question_id = ?", questionID).First(&answer).Error; err != nil {
 			return nil, err
 		}
-		answer.ExpectAnswer = expectAnswer.(string)
+		if val, ok := expectAnswer.(string); ok {
+			answer.ExpectAnswer = val
+		} else {
+			return nil, errors.New("invalid type for ShortAnswer")
+		}
 		if err := r.DB.Save(&answer).Error; err != nil {
 			return nil, err
 		}
@@ -111,7 +120,11 @@ func (r *AnswerRepository) UpdateAnswer(questionID int, questionType string, exp
 		if err := r.DB.Where("question_id = ?", questionID).First(&answer).Error; err != nil {
 			return nil, err
 		}
-		answer.ExpectAnswer = expectAnswer.(bool)
+		if val, ok := expectAnswer.(bool); ok {
+			answer.ExpectAnswer = val
+		} else {
+			return nil, errors.New("invalid type for TrueFalse")
+		}
 		if err := r.DB.Save(&answer).Error; err != nil {
 			return nil, err
 		}
@@ -121,6 +134,7 @@ func (r *AnswerRepository) UpdateAnswer(questionID int, questionType string, exp
 		return nil, errors.New("invalid question type")
 	}
 }
+
 
 func (r *AnswerRepository) DeleteAnswer(questionID int, questionType string) error {
 	if questionID <= 0 {

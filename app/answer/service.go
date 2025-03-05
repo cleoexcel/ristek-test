@@ -26,8 +26,8 @@ func (s *AnswerService) CreateAnswer(questionID int, questionType string, expect
 	return answer, nil
 }
 
-func (s *AnswerService) UpdateAnswer(questionID int, questionType string, expectAnswer interface{}) (interface{}, error) {
-	answer, err := s.Repo.UpdateAnswer(questionID, questionType, expectAnswer)
+func (s *AnswerService) UpdateAnswer(questionID int, expectAnswer interface{}) (interface{}, error) {
+	answer, err := s.Repo.UpdateAnswer(questionID, expectAnswer)
 	if err != nil {
 		log.Printf("Error updating answer: %v", err)
 		return nil, err

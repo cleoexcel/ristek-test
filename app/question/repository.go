@@ -18,6 +18,7 @@ func NewQuestionRepository(db *gorm.DB) *QuestionRepository {
 func (r *QuestionRepository) GetAllQuestionsByTryoutID(tryoutID int) ([]*models.Question, error) {
 	var questions []*models.Question
 	err := r.DB.
+	Preload("Tryout").
 		Preload("ShortAnswer").
 		Preload("TrueFalse").
 		Where("tryout_id = ?", tryoutID).
@@ -57,12 +58,17 @@ func (r *QuestionRepository) CreateQuestion(content string, tryoutID int, questi
 	if err := r.DB.Create(question).Error; err != nil {
 		return nil, err
 	}
+
+	if err := r.DB.Preload("Tryout").First(&question, question.ID).Error; err != nil {
+		return nil, err
+	}
+
 	return question, nil
 }
 
-func (r *QuestionRepository) EditQuestionByQuestionID(id int, content string, questionType string, weight int) (*models.Question, error) {
+func (r *QuestionRepository) EditQuestionByQuestionID(id int, content string, weight int) (*models.Question, error) {
 	var question models.Question
-	err := r.DB.First(&question, id).Error
+	err := r.DB.Preload("Tryout").First(&question, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +80,6 @@ func (r *QuestionRepository) EditQuestionByQuestionID(id int, content string, qu
 	}
 
 	question.Content = content
-	question.QuestionType = questionType
 	question.Weight = weight
 	if err := r.DB.Save(&question).Error; err != nil {
 		return nil, err
@@ -85,7 +90,7 @@ func (r *QuestionRepository) EditQuestionByQuestionID(id int, content string, qu
 
 func (r *QuestionRepository) DeleteQuestionByQuestionID(id int) error {
 	var question models.Question
-	err := r.DB.First(&question, id).Error
+	err := r.DB.Preload("Tryout").First(&question, id).Error 
 	if err != nil {
 		return err
 	}
@@ -105,9 +110,15 @@ func (r *QuestionRepository) DeleteQuestionByQuestionID(id int) error {
 
 func (r *QuestionRepository) GetQuestionByID(id int) (*models.Question, error) {
 	var question models.Question
-	err := r.DB.First(&question, id).Error
+	err := r.DB.
+		Preload("Tryout"). 
+		Preload("ShortAnswer").
+		Preload("TrueFalse").
+		First(&question, id).
+		Error
 	if err != nil {
 		return nil, err
 	}
 	return &question, nil
 }
+

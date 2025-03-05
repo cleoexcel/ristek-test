@@ -13,7 +13,7 @@ type SubmissionRepository interface {
 	GetSubmissionByTryoutID(tryoutID int) ([]models.Submission, error)
 	CreateSubmissionAnswer(submissionID int, questionID int, submittedAnswer interface{}) (interface{}, error)
 	GetAllAnswersBySubmissionID(submissionID int) ([]interface{}, error)
-	CalculateScoreBySubmissionID(submissionID int) (int, error)
+	CalculateScoreBySubmissionID(submissionID int) (float64, error)
 }
 
 type submissionRepository struct {
@@ -121,11 +121,11 @@ func (r *submissionRepository) GetAllAnswersBySubmissionID(submissionID int) ([]
 	var shortAnswers []models.SubmissionAnswerShortAnswer
 	var answers []interface{}
 
-	if err := r.DB.Preload("Question").Where("submission_id = ?", submissionID).Find(&trueFalseAnswers).Error; err != nil {
+	if err := r.DB.Preload("Question.Tryout").Where("submission_id = ?", submissionID).Find(&trueFalseAnswers).Error; err != nil {
 		return nil, err
 	}
 
-	if err := r.DB.Preload("Question").Where("submission_id = ?", submissionID).Find(&shortAnswers).Error; err != nil {
+	if err := r.DB.Preload("Question.Tryout").Where("submission_id = ?", submissionID).Find(&shortAnswers).Error; err != nil {
 		return nil, err
 	}
 
@@ -139,7 +139,7 @@ func (r *submissionRepository) GetAllAnswersBySubmissionID(submissionID int) ([]
 	return answers, nil
 }
 
-func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (int, error) {
+func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (float64, error) {
 	var submission models.Submission
 	if err := r.DB.First(&submission, submissionID).Error; err != nil {
 		return 0, err
@@ -151,6 +151,7 @@ func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (i
 	}
 
 	totalScore := 0
+	totalWeight := 0
 
 	for _, answer := range answers {
 		switch ans := answer.(type) {
@@ -159,8 +160,15 @@ func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (i
 			if err := r.DB.Where("question_id = ?", ans.QuestionID).First(&correctAnswer).Error; err != nil {
 				continue
 			}
+
+			var question models.Question
+			if err := r.DB.Where("id = ?", ans.QuestionID).First(&question).Error; err != nil {
+				continue
+			}
+
+			totalWeight += question.Weight
 			if ans.AnswerSubmitted == correctAnswer.ExpectAnswer {
-				totalScore += ans.Question.Weight
+				totalScore += question.Weight
 			}
 
 		case models.SubmissionAnswerShortAnswer:
@@ -168,16 +176,29 @@ func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (i
 			if err := r.DB.Where("question_id = ?", ans.QuestionID).First(&correctAnswer).Error; err != nil {
 				continue
 			}
+
+			var question models.Question
+			if err := r.DB.Where("id = ?", ans.QuestionID).First(&question).Error; err != nil {
+				continue
+			}
+
+			totalWeight += question.Weight
 			if ans.AnswerSubmitted == correctAnswer.ExpectAnswer {
-				totalScore += ans.Question.Weight
+				totalScore += question.Weight
 			}
 		}
 	}
 
-	submission.TotalScore = totalScore
+	if totalWeight == 0 {
+		return 0, fmt.Errorf("total weight is zero, invalid scoring")
+	}
+
+	finalScore := (float64(totalScore) / float64(totalWeight)) * 100
+
+	submission.TotalScore = finalScore
 	if err := r.DB.Save(&submission).Error; err != nil {
 		return 0, err
 	}
 
-	return totalScore, nil
+	return finalScore, nil
 }

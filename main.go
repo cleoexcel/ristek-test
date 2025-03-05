@@ -52,7 +52,7 @@ func main() {
 	questionservice := question.NewQuestionService(questionrepo, answerservice)
 	questionhandler := question.NewQuestionHandler(questionservice)
 
-	r.POST("/question/create-question", questionhandler.CreateQuestion)
+	r.POST("/question/create-question/:id", questionhandler.CreateQuestion)
 	r.GET("/question/get-all-question/:id", questionhandler.GetAllQuestionsByTryoutID)
 	r.PATCH("/question/edit-question/:id", questionhandler.EditQuestionByQuestionID)
 	r.DELETE("/question/delete-question/:id", questionhandler.DeleteQuestionByQuestionID)

@@ -40,9 +40,14 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 		return
 	}
 
+	tryoutID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tryout ID"})
+		return
+	}
+	
 	var input struct {
 		Content      string      `json:"content"`
-		TryoutID     int         `json:"tryout_id"`
 		QuestionType string      `json:"question_type"`
 		Weight       int         `json:"weight"`
 		ExpectAnswer interface{} `json:"expectanswer"`
@@ -54,7 +59,7 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 	}
 
 	var tryout models.Tryout
-	if err := h.Service.Repo.DB.First(&tryout, input.TryoutID).Error; err != nil {
+	if err := h.Service.Repo.DB.First(&tryout, tryoutID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Tryout not found"})
 		return
 	}
@@ -64,7 +69,7 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 		return
 	}
 
-	question, err := h.Service.CreateQuestion(input.Content, input.TryoutID, input.QuestionType, input.Weight, input.ExpectAnswer)
+	question, err := h.Service.CreateQuestion(input.Content, tryoutID, input.QuestionType, input.Weight, input.ExpectAnswer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -83,6 +88,7 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 	})
 }
 
+
 func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
 	userID, err := strconv.Atoi(middleware.ExtractUserID(c))
 	if err != nil {
@@ -97,18 +103,13 @@ func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
 	}
 
 	var question models.Question
-	if err := h.Service.Repo.DB.First(&question, questionID).Error; err != nil {
+	if err := h.Service.Repo.DB.Preload("Tryout").First(&question, questionID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
 		return
 	}
 
-	var tryout models.Tryout
-	if err := h.Service.Repo.DB.First(&tryout, question.TryoutID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Tryout not found"})
-		return
-	}
 
-	if tryout.UserID != userID {
+	if question.Tryout.UserID != userID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to edit this question"})
 		return
 	}
@@ -116,7 +117,6 @@ func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
 	var input struct {
 		Content      string      `json:"content"`
 		Weight       int         `json:"weight"`
-		QuestionType string      `json:"question_type"`
 		ExpectAnswer interface{} `json:"expectanswer"`
 	}
 
@@ -125,13 +125,13 @@ func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
 		return
 	}
 
-	err = h.Service.EditQuestionByQuestionID(questionID, input.Content, input.QuestionType, input.Weight, input.ExpectAnswer)
+	err = h.Service.EditQuestionByQuestionID(questionID, input.Content, input.Weight, input.ExpectAnswer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	answer, err := h.Service.AnswerService.UpdateAnswer(questionID, input.QuestionType, input.ExpectAnswer)
+	answer, err := h.Service.AnswerService.UpdateAnswer(questionID, input.ExpectAnswer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Question updated, but failed to update answer"})
 		return
@@ -157,19 +157,13 @@ func (h *QuestionHandler) DeleteQuestionByQuestionID(c *gin.Context) {
 	}
 
 	var question models.Question
-	if err := h.Service.Repo.DB.First(&question, questionID).Error; err != nil {
+	if err := h.Service.Repo.DB.Preload("Tryout").First(&question, questionID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
 		return
 	}
 
-	var tryout models.Tryout
-	if err := h.Service.Repo.DB.First(&tryout, question.TryoutID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Tryout not found"})
-		return
-	}
-
-	if tryout.UserID != userID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to delete this question"})
+	if question.Tryout.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to edit this question"})
 		return
 	}
 

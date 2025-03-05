@@ -13,6 +13,7 @@ type Question struct {
 	QuestionType string     `json:"question_type"`
 	CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    *time.Time `json:"updated_at,omitempty" gorm:"autoUpdateTime"`
+	Tryout       Tryout     `json:"tryout" gorm:"foreignKey:TryoutID"` 
 
 	ShortAnswer *ShortAnswer `gorm:"foreignKey:QuestionID"`
 	TrueFalse   *TrueFalse   `gorm:"foreignKey:QuestionID"`

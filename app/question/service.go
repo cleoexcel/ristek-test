@@ -30,12 +30,12 @@ func (s *QuestionService) CreateQuestion(content string, tryoutID int, questionT
 	return question, nil
 }
 
-func (s *QuestionService) EditQuestionByQuestionID(id int, content string, questionType string, weight int, expectAnswer interface{}) error {
-	_, err := s.Repo.EditQuestionByQuestionID(id, content, questionType, weight)
+func (s *QuestionService) EditQuestionByQuestionID(id int, content string, weight int, expectAnswer interface{}) error {
+	_, err := s.Repo.EditQuestionByQuestionID(id, content, weight)
 	if err != nil {
 		return err
 	}
-	_, err = s.AnswerService.UpdateAnswer(id, questionType, expectAnswer)
+	_, err = s.AnswerService.UpdateAnswer(id, expectAnswer)
 	return err
 }
 
