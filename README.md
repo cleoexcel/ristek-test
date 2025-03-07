@@ -27,15 +27,16 @@ Anda dapat mengakses penjelasan secara detail pada setiap routes melalui [link i
 
 ## Penjelasan 📜
 - Pada category tryout hanya terdiri dari Biologi, Physics, Math, Chemistry, dan History.
-- Pengguna dapat mengedit title dan description tryout, tetapi tidak dapat mengedit category
-- Pengguna dapat menjawab/mensubmit tryout dan mendapatkan score berdasarkan bobot yang diberikan pada setiap question
+- User dapat mengedit title dan description tryout, tetapi tidak dapat mengedit category.
+- User dapat mengedit content, weight, expectanswer yang mereka telah buat untuk suatu question, tetapi tidak dapat mengedit question_type.
+- User dapat menjawab/mensubmit tryout dan mendapatkan score berdasarkan bobot(weight) yang diberikan pada setiap question.
 
 ## Alur 👣
 1. User mendaftar akunnya dengan memberikan username dan password. 
 2. User melakukan login ke akun mereka.
-3. User dapat membuat tryout mereka.
-4. User dapat melihat tryout-tryout dari user lain dan tryout mereka sendiri
-5. User dapat mengedit judul dan description tryout mereka sendiri.
-6. User dapat membuat/mengedit/mendelete question sebelum ada yang melakukan submisi pada tryout mereka
-7. User dapat melakukan banyak submisi pada satu tryout
+3. User membuat tryout mereka.
+4. User melihat tryout-tryout dari user lain dan tryout mereka sendiri
+5. User mengedit judul dan description tryout mereka sendiri.
+6. User membuat/mengedit/mendelete question sebelum ada yang melakukan submisi pada tryout mereka
+7. User melakukan banyak submisi pada satu tryout (optional)
 8. User akan mendapatkan score pada setiap submisi yang mereka lakukan
