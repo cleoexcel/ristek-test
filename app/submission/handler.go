@@ -57,7 +57,7 @@ func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
 }
 
 func (h *SubmissionHandler) GetSubmissionByTryoutID(c *gin.Context) {
-	tryoutID, err := strconv.Atoi(c.Param("tryoutId"))
+	tryoutID, err := strconv.Atoi(c.Param("tryoutid"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tryout ID"})
 		return
@@ -73,13 +73,13 @@ func (h *SubmissionHandler) GetSubmissionByTryoutID(c *gin.Context) {
 }
 
 func (h *SubmissionHandler) GetAllAnswerBySubmissionID(c *gin.Context) {
-	submissionID, err := strconv.Atoi(c.Param("submissionID"))
+	SubmissionID, err := strconv.Atoi(c.Param("submissionid"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Submission ID"})
 		return
 	}
 
-	answers, err := h.service.GetAllAnswersBySubmissionID(submissionID)
+	answers, err := h.service.GetAllAnswersBySubmissionID(SubmissionID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Answers not found"})
 		return
@@ -89,20 +89,20 @@ func (h *SubmissionHandler) GetAllAnswerBySubmissionID(c *gin.Context) {
 }
 
 func (h *SubmissionHandler) CalculateScoreBySubmissionID(c *gin.Context) {
-	submissionID, err := strconv.Atoi(c.Param("submissionID"))
+	SubmissionID, err := strconv.Atoi(c.Param("submissionid"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Submission ID"})
 		return
 	}
 
-	score, err := h.service.CalculateScoreBySubmissionID(submissionID)
+	score, err := h.service.CalculateScoreBySubmissionID(SubmissionID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to calculate score"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Score calculated successfully",
+		"message":     "Score calculated successfully",
 		"total_score": score,
 	})
 }

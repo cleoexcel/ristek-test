@@ -18,7 +18,7 @@ func NewQuestionHandler(service *QuestionService) *QuestionHandler {
 }
 
 func (h *QuestionHandler) GetAllQuestionsByTryoutID(c *gin.Context) {
-	tryoutID, err := strconv.Atoi(c.Param("tryoutId"))
+	tryoutID, err := strconv.Atoi(c.Param("tryoutid"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tryout ID"})
 		return
@@ -40,7 +40,7 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 		return
 	}
 
-	tryoutID, err := strconv.Atoi(c.Param("tryoutId"))
+	tryoutID, err := strconv.Atoi(c.Param("tryoutid"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tryout ID"})
 		return

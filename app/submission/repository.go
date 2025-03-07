@@ -11,19 +11,19 @@ import (
 type SubmissionRepository interface {
 	CreateSubmission(tryoutID int, userID int) (*models.Submission, error)
 	GetSubmissionByTryoutID(tryoutID int) ([]models.Submission, error)
-	CreateSubmissionAnswer(submissionID int, questionID int, submittedAnswer interface{}) (interface{}, error)
-	GetAllAnswersBySubmissionID(submissionID int) ([]interface{}, error)
-	CalculateScoreBySubmissionID(submissionID int) (float64, error)
+	CreateSubmissionAnswer(SubmissionID int, questionID int, submittedAnswer interface{}) (interface{}, error)
+	GetAllAnswersBySubmissionID(SubmissionID int) ([]interface{}, error)
+	CalculateScoreBySubmissionID(SubmissionID int) (float64, error)
 }
 
 type submissionRepository struct {
-	DB *gorm.DB
+	DB           *gorm.DB
 	QuestionRepo question.QuestionRepository
 }
 
 func NewSubmissionRepository(db *gorm.DB) SubmissionRepository {
 	return &submissionRepository{
-		DB: db, 
+		DB:           db,
 		QuestionRepo: *question.NewQuestionRepository(db),
 	}
 }
@@ -35,8 +35,8 @@ func (r *submissionRepository) CreateSubmission(tryoutID int, userID int) (*mode
 	r.DB.Model(&models.Submission{}).Where("tryout_id = ?", tryoutID).Count(&numberOfAttempt)
 
 	submission = &models.Submission{
-		TryoutID: tryoutID,
-		UserID: userID,
+		TryoutID:        tryoutID,
+		UserID:          userID,
 		NumberOfAttempt: int(numberOfAttempt) + 1,
 	}
 
@@ -51,7 +51,7 @@ func (r *submissionRepository) CreateSubmission(tryoutID int, userID int) (*mode
 	return submission, nil
 }
 
-func (r *submissionRepository) CreateSubmissionAnswer(submissionID int, questionID int, submittedAnswer interface{}) (interface{}, error) {
+func (r *submissionRepository) CreateSubmissionAnswer(SubmissionID int, questionID int, submittedAnswer interface{}) (interface{}, error) {
 	var submissionAnswer interface{}
 
 	question, err := r.QuestionRepo.GetQuestionByID(questionID)
@@ -63,7 +63,7 @@ func (r *submissionRepository) CreateSubmissionAnswer(submissionID int, question
 
 	if questionType == "TrueFalse" {
 		submissionAnswerTF := &models.SubmissionAnswerTrueFalse{
-			SubmissionId:    submissionID,
+			SubmissionID:    SubmissionID,
 			QuestionID:      questionID,
 			AnswerSubmitted: submittedAnswer.(bool),
 		}
@@ -79,7 +79,7 @@ func (r *submissionRepository) CreateSubmissionAnswer(submissionID int, question
 		submissionAnswer = submissionAnswerTF
 	} else {
 		submissionAnswerShortAns := &models.SubmissionAnswerShortAnswer{
-			SubmissionId:    submissionID,
+			SubmissionID:    SubmissionID,
 			QuestionID:      questionID,
 			AnswerSubmitted: submittedAnswer.(string),
 		}
@@ -87,7 +87,6 @@ func (r *submissionRepository) CreateSubmissionAnswer(submissionID int, question
 		if err := r.DB.Create(submissionAnswerShortAns).Error; err != nil {
 			return nil, err
 		}
-	
 
 		if err := r.DB.Preload("Question").First(submissionAnswerShortAns, submissionAnswerShortAns.ID).Error; err != nil {
 			return nil, err
@@ -108,16 +107,16 @@ func (r *submissionRepository) GetSubmissionByTryoutID(tryoutID int) ([]models.S
 	return submissions, nil
 }
 
-func (r *submissionRepository) GetAllAnswersBySubmissionID(submissionID int) ([]interface{}, error) {
+func (r *submissionRepository) GetAllAnswersBySubmissionID(SubmissionID int) ([]interface{}, error) {
 	var trueFalseAnswers []models.SubmissionAnswerTrueFalse
 	var shortAnswers []models.SubmissionAnswerShortAnswer
 	var answers []interface{}
 
-	if err := r.DB.Preload("Question.Tryout").Where("submission_id = ?", submissionID).Find(&trueFalseAnswers).Error; err != nil {
+	if err := r.DB.Preload("Question.Tryout").Where("submission_id = ?", SubmissionID).Find(&trueFalseAnswers).Error; err != nil {
 		return nil, err
 	}
 
-	if err := r.DB.Preload("Question.Tryout").Where("submission_id = ?", submissionID).Find(&shortAnswers).Error; err != nil {
+	if err := r.DB.Preload("Question.Tryout").Where("submission_id = ?", SubmissionID).Find(&shortAnswers).Error; err != nil {
 		return nil, err
 	}
 
@@ -131,13 +130,13 @@ func (r *submissionRepository) GetAllAnswersBySubmissionID(submissionID int) ([]
 	return answers, nil
 }
 
-func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (float64, error) {
+func (r *submissionRepository) CalculateScoreBySubmissionID(SubmissionID int) (float64, error) {
 	var submission models.Submission
-	if err := r.DB.First(&submission, submissionID).Error; err != nil {
+	if err := r.DB.First(&submission, SubmissionID).Error; err != nil {
 		return 0, err
 	}
 
-	answers, err := r.GetAllAnswersBySubmissionID(submissionID)
+	answers, err := r.GetAllAnswersBySubmissionID(SubmissionID)
 	if err != nil {
 		return 0, err
 	}
@@ -180,7 +179,6 @@ func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (f
 			}
 		}
 	}
-
 
 	if totalWeight == 0 {
 		return 0, fmt.Errorf("total weight is zero, invalid scoring")
