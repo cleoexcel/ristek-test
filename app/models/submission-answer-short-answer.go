@@ -10,6 +10,6 @@ type SubmissionAnswerShortAnswer struct {
 	QuestionID      int       `json:"question_id" gorm:"index"`
 	AnswerSubmitted string    `json:"answer_submitted"`
 	CreatedAt       time.Time `json:"created_at" gorm:"autoCreateTime"`
-
+	
 	Question Question `json:"question" gorm:"foreignKey:QuestionID;references:ID"`
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type AuthHandler struct{
+type AuthHandler struct {
 	service AuthService
 }
 
@@ -17,7 +17,7 @@ func NewAuthHandler(service AuthService) *AuthHandler {
 func (h *AuthHandler) GetAllUsers(c *gin.Context) {
 	users, err := h.service.GetAllUsers()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Failed to fetch users"})
 		return
 	}
 
@@ -25,7 +25,7 @@ func (h *AuthHandler) GetAllUsers(c *gin.Context) {
 }
 
 func (h *AuthHandler) GetUserByUsername(c *gin.Context) {
-	username := c.Param("username") 
+	username := c.Param("username")
 
 	user, err := h.service.GetUser(username)
 	if err != nil {
@@ -49,7 +49,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	user, err := h.service.Register(input.Username, input.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Failed to register"})
 		return
 	}
 

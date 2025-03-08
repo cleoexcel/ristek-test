@@ -1,8 +1,9 @@
 package answer
 
 import (
-	
 	"log"
+
+	"github.com/cleoexcel/ristek-test/app/models"
 )
 
 type AnswerService struct {
@@ -17,8 +18,8 @@ func (s *AnswerService) GetAllAnswers() (interface{}, error) {
 	return s.Repo.GetAllAnswers()
 }
 
-func (s *AnswerService) CreateAnswer(questionID int, questionType string, expectAnswer interface{}) (interface{}, error) {
-	answer, err := s.Repo.CreateAnswer(questionID, questionType, expectAnswer)
+func (s *AnswerService) CreateAnswer(questionID int, questionType string, expectAnswer interface{}, options []models.MultipleChoiceOption) (interface{}, error) {
+	answer, err := s.Repo.CreateAnswer(questionID, questionType, expectAnswer, options)
 	if err != nil {
 		log.Printf("Error creating answer: %v", err)
 		return nil, err
@@ -26,8 +27,8 @@ func (s *AnswerService) CreateAnswer(questionID int, questionType string, expect
 	return answer, nil
 }
 
-func (s *AnswerService) UpdateAnswer(questionID int, expectAnswer interface{}) (interface{}, error) {
-	answer, err := s.Repo.UpdateAnswer(questionID, expectAnswer)
+func (s *AnswerService) UpdateAnswer(questionID int, expectAnswer interface{}, options []models.MultipleChoiceOption) (interface{}, error) {
+	answer, err := s.Repo.UpdateAnswer(questionID, expectAnswer, options)
 	if err != nil {
 		log.Printf("Error updating answer: %v", err)
 		return nil, err

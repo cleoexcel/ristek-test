@@ -40,8 +40,9 @@ func InitDatabase() (db *gorm.DB) {
 	db.AutoMigrate(&models.TrueFalse{})
 	db.AutoMigrate(&models.ShortAnswer{})
 	db.AutoMigrate(&models.MultipleChoice{})
-	db.AutoMigrate(&models.SubmissionAnswerShortAnswer{})
+	db.AutoMigrate(&models.MultipleChoiceOption{})
 	db.AutoMigrate(&models.SubmissionAnswerTrueFalse{})
+	db.AutoMigrate(&models.SubmissionAnswerShortAnswer{})
 	db.AutoMigrate(&models.SubmissionAnswerMultipleChoice{})
 
 	JWT_SECRET_KEY = os.Getenv("JWT_SECRET_KEY")

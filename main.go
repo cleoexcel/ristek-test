@@ -61,7 +61,7 @@ func main() {
 	submissionservice := submission.NewSubmissionService(submissionrepo)
 	submissionhandler := submission.NewSubmissionHandler(submissionservice)
 
-	r.POST("/submission/create", submissionhandler.CreateSubmission)
+	r.POST("/submission/create/:tryoutid", submissionhandler.CreateSubmission)
 	r.GET("/submission/get-submission/:tryoutid", submissionhandler.GetSubmissionByTryoutID)
 	r.GET("/submission/get-all-answer/:submissionid", submissionhandler.GetAllAnswerBySubmissionID)
 	r.GET("/submission/calculate-score/:submissionid", submissionhandler.CalculateScoreBySubmissionID)

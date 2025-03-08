@@ -31,7 +31,7 @@ func (s *QuestionService) EditQuestionByQuestionID(id int, content string, weigh
 	if err != nil {
 		return err
 	}
-	_, err = s.AnswerService.UpdateAnswer(id, expectAnswer)
+	_, err = s.AnswerService.UpdateAnswer(id, expectAnswer, []models.MultipleChoiceOption{})
 	return err
 }
 

@@ -18,16 +18,26 @@ func NewSubmissionHandler(service SubmissionService) *SubmissionHandler {
 }
 
 func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
+	tryoutID, err := strconv.Atoi(c.Param("tryoutid"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tryout ID"})
+		return
+	}
+
 	var input struct {
-		TryoutID         int `json:"tryout_id"`
 		SubmittedAnswers []struct {
 			QuestionID      int         `json:"question_id"`
-			SubmittedAnswer interface{} `json:"submitted_answer"` // interface spy bisa bool (T/F) atau string (short answer):D
-		} `json:"answers_submitted"`
+			SubmittedAnswer interface{} `json:"submitted_answer"`
+		} `json:"submitted_answers"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(input.SubmittedAnswers) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No submitted answers provided"})
 		return
 	}
 
@@ -37,24 +47,27 @@ func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
 		return
 	}
 
-	submission, err := h.service.CreateSubmission(input.TryoutID, userID)
+	submission, err := h.service.CreateSubmission(tryoutID, userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create submission"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Failed to create submission"})
 		return
 	}
 
+	for i, submissionQuestion := range input.SubmittedAnswers {
+		fmt.Println("Answer", i, "for Question ID:", submissionQuestion.QuestionID)
 
-	for id2, submissionQuestion := range input.SubmittedAnswers {
 		submissionAnswer, err := h.service.CreateSubmissionAnswer(submission.ID, submissionQuestion.QuestionID, submissionQuestion.SubmittedAnswer)
-		fmt.Println("SUBANS", id2, submissionAnswer)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create submission answer"})
+			c.JSON(http.StatusConflict, gin.H{"error": "Failed to create submission answer"})
 			return
 		}
+
+		fmt.Println(" Submission Answer Created:", submissionAnswer)
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Submission created successfully", "submission": submission})
 }
+
 
 func (h *SubmissionHandler) GetSubmissionByTryoutID(c *gin.Context) {
 	tryoutID, err := strconv.Atoi(c.Param("tryoutid"))
@@ -97,7 +110,7 @@ func (h *SubmissionHandler) CalculateScoreBySubmissionID(c *gin.Context) {
 
 	score, err := h.service.CalculateScoreBySubmissionID(SubmissionID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to calculate score"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Failed to calculate score"})
 		return
 	}
 

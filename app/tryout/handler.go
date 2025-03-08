@@ -43,7 +43,7 @@ func (h *TryoutHandler) CreateTryout(c *gin.Context) {
 
 	tryout, err := h.service.CreateTryout(input.Title, input.Description, userId, input.Category)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tryout"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Failed to create tryout"})
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *TryoutHandler) GetAllTryout(c *gin.Context) {
 
 	tryouts, err := h.service.GetAllTryout(title, category, createdAt, userId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tryouts"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Failed to fetch tryouts"})
 		return
 	}
 

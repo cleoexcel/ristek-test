@@ -26,7 +26,7 @@ func (h *QuestionHandler) GetAllQuestionsByTryoutID(c *gin.Context) {
 
 	questions, err := h.Service.GetAllQuestionsByTryoutID(tryoutID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch questions"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Failed to fetch questions"})
 		return
 	}
 
@@ -45,12 +45,13 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Tryout ID"})
 		return
 	}
-	
+
 	var input struct {
 		Content      string      `json:"content"`
 		QuestionType string      `json:"question_type"`
 		Weight       int         `json:"weight"`
 		ExpectAnswer interface{} `json:"expectanswer"`
+		Options      []models.MultipleChoiceOption    `json:"options,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -71,13 +72,13 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 
 	question, err := h.Service.CreateQuestion(input.Content, tryoutID, input.QuestionType, input.Weight, input.ExpectAnswer)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		return
 	}
-
-	answer, err := h.Service.AnswerService.CreateAnswer(question.ID, input.QuestionType, input.ExpectAnswer)
+	
+	answer, err := h.Service.AnswerService.CreateAnswer(question.ID, input.QuestionType, input.ExpectAnswer, input.Options)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Question created, but failed to create answer"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Question created, but failed to create answer"})
 		return
 	}
 
@@ -87,7 +88,6 @@ func (h *QuestionHandler) CreateQuestion(c *gin.Context) {
 		"answer":   answer,
 	})
 }
-
 
 func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
 	userID, err := strconv.Atoi(middleware.ExtractUserID(c))
@@ -103,11 +103,10 @@ func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
 	}
 
 	var question models.Question
-	if err := h.Service.Repo.DB.Preload("Tryout").First(&question, questionID).Error; err != nil {
+	if err := h.Service.Repo.DB.Preload("Tryout").Preload("ShortAnswer").Preload("TrueFalse").Preload("MultipleChoice").First(&question, questionID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
 		return
 	}
-
 
 	if question.Tryout.UserID != userID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to edit this question"})
@@ -118,6 +117,7 @@ func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
 		Content      string      `json:"content"`
 		Weight       int         `json:"weight"`
 		ExpectAnswer interface{} `json:"expectanswer"`
+		Options      []models.MultipleChoiceOption    `json:"options,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -127,14 +127,20 @@ func (h *QuestionHandler) EditQuestionByQuestionID(c *gin.Context) {
 
 	err = h.Service.EditQuestionByQuestionID(questionID, input.Content, input.Weight, input.ExpectAnswer)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		return
 	}
 
-	answer, err := h.Service.AnswerService.UpdateAnswer(questionID, input.ExpectAnswer)
+	answer, err := h.Service.AnswerService.UpdateAnswer(questionID, input.ExpectAnswer, input.Options)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Question updated, but failed to update answer"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Question updated, but failed to update answer"})
 		return
+	}
+	if mc, ok := answer.(*models.MultipleChoice); ok {
+		if err := h.Service.Repo.DB.Preload("Options").First(&mc, mc.ID).Error; err != nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "Failed to load options"})
+			return
+		}
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -170,12 +176,12 @@ func (h *QuestionHandler) DeleteQuestionByQuestionID(c *gin.Context) {
 	questionType := question.QuestionType
 	err = h.Service.AnswerService.DeleteAnswer(questionID, questionType)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete answer"})
+		c.JSON(http.StatusConflict, gin.H{"error": "Failed to delete answer"})
 		return
 	}
 	err = h.Service.DeleteQuestionByQuestionID(questionID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusNoContent, gin.H{"message": "Question and answer deleted successfully"})

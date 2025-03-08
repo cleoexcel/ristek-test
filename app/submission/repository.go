@@ -51,52 +51,74 @@ func (r *submissionRepository) CreateSubmission(tryoutID int, userID int) (*mode
 	return submission, nil
 }
 
-func (r *submissionRepository) CreateSubmissionAnswer(SubmissionID int, questionID int, submittedAnswer interface{}) (interface{}, error) {
+func (r *submissionRepository) CreateSubmissionAnswer(submissionID int, questionID int, submittedAnswer interface{}) (interface{}, error) {
 	var submissionAnswer interface{}
 
 	question, err := r.QuestionRepo.GetQuestionByID(questionID)
 	if err != nil {
 		return nil, err
 	}
-
 	questionType := question.QuestionType
 
-	if questionType == "TrueFalse" {
+	switch questionType {
+	case "TrueFalse":
+		answer, ok := submittedAnswer.(bool)
+		if !ok {
+			return nil, fmt.Errorf("expected bool for TrueFalse question")
+		}
+
 		submissionAnswerTF := &models.SubmissionAnswerTrueFalse{
-			SubmissionID:    SubmissionID,
+			SubmissionID:    submissionID,
 			QuestionID:      questionID,
-			AnswerSubmitted: submittedAnswer.(bool),
+			AnswerSubmitted: answer,
 		}
 
 		if err := r.DB.Create(submissionAnswerTF).Error; err != nil {
 			return nil, err
 		}
+		submissionAnswer = submissionAnswerTF
 
-		if err := r.DB.Preload("Question").First(submissionAnswerTF, submissionAnswerTF.ID).Error; err != nil {
-			return nil, err
+	case "ShortAnswer":
+		answer, ok := submittedAnswer.(string)
+		if !ok {
+			return nil, fmt.Errorf("expected string for ShortAnswer question")
 		}
 
-		submissionAnswer = submissionAnswerTF
-	} else {
 		submissionAnswerShortAns := &models.SubmissionAnswerShortAnswer{
-			SubmissionID:    SubmissionID,
+			SubmissionID:    submissionID,
 			QuestionID:      questionID,
-			AnswerSubmitted: submittedAnswer.(string),
+			AnswerSubmitted: answer,
 		}
 
 		if err := r.DB.Create(submissionAnswerShortAns).Error; err != nil {
 			return nil, err
 		}
+		submissionAnswer = submissionAnswerShortAns
 
-		if err := r.DB.Preload("Question").First(submissionAnswerShortAns, submissionAnswerShortAns.ID).Error; err != nil {
+	case "MultipleChoice":
+		optionIDFloat, ok := submittedAnswer.(float64) 
+		if !ok {
+			return nil, fmt.Errorf("expected number for MultipleChoice question")
+		}
+		optionID := int(optionIDFloat)
+
+		submissionMCAns := &models.SubmissionAnswerMultipleChoice{
+			SubmissionID:           submissionID,
+			QuestionID:             questionID,
+			MultipleChoiceOptionID: optionID,
+		}
+		if err := r.DB.Create(submissionMCAns).Error; err != nil {
 			return nil, err
 		}
+		submissionAnswer = submissionMCAns
 
-		submissionAnswer = submissionAnswerShortAns
+	default:
+		return nil, fmt.Errorf("invalid question type")
 	}
 
 	return submissionAnswer, nil
 }
+
 
 func (r *submissionRepository) GetSubmissionByTryoutID(tryoutID int) ([]models.Submission, error) {
 	var submissions []models.Submission
@@ -110,35 +132,49 @@ func (r *submissionRepository) GetSubmissionByTryoutID(tryoutID int) ([]models.S
 func (r *submissionRepository) GetAllAnswersBySubmissionID(SubmissionID int) ([]interface{}, error) {
 	var trueFalseAnswers []models.SubmissionAnswerTrueFalse
 	var shortAnswers []models.SubmissionAnswerShortAnswer
+	var multipleChoiceAnswers []models.SubmissionAnswerMultipleChoice
 	var answers []interface{}
 
-	if err := r.DB.Preload("Question.Tryout").Where("submission_id = ?", SubmissionID).Find(&trueFalseAnswers).Error; err != nil {
+	var submission models.Submission
+	if err := r.DB.First(&submission, SubmissionID).Error; err != nil {
 		return nil, err
 	}
 
-	if err := r.DB.Preload("Question.Tryout").Where("submission_id = ?", SubmissionID).Find(&shortAnswers).Error; err != nil {
-		return nil, err
+	if err := r.DB.Preload("Question").Preload("Question.Tryout").
+		Where("submission_id = ?", SubmissionID).Find(&trueFalseAnswers).Error; err != nil {
+	} else {
+		answers = append(answers, trueFalseAnswers)
 	}
 
-	for _, answer := range trueFalseAnswers {
-		answers = append(answers, answer)
+	if err := r.DB.Preload("Question").Preload("Question.Tryout").
+		Where("submission_id = ?", SubmissionID).Find(&shortAnswers).Error; err != nil {
+	} else {
+		answers = append(answers, shortAnswers)
 	}
-	for _, answer := range shortAnswers {
-		answers = append(answers, answer)
+
+	if err := r.DB.Preload("Question").Preload("Question.Tryout").Preload("MultipleChoiceOption").
+		Where("submission_id = ?", SubmissionID).Find(&multipleChoiceAnswers).Error; err != nil {
+	} else {
+		answers = append(answers, multipleChoiceAnswers)
 	}
 
 	return answers, nil
 }
 
-func (r *submissionRepository) CalculateScoreBySubmissionID(SubmissionID int) (float64, error) {
+
+func (r *submissionRepository) CalculateScoreBySubmissionID(submissionID int) (float64, error) {
 	var submission models.Submission
-	if err := r.DB.First(&submission, SubmissionID).Error; err != nil {
+	if err := r.DB.First(&submission, submissionID).Error; err != nil {
 		return 0, err
 	}
 
-	answers, err := r.GetAllAnswersBySubmissionID(SubmissionID)
+	answers, err := r.GetAllAnswersBySubmissionID(submissionID)
 	if err != nil {
 		return 0, err
+	}
+
+	if len(answers) == 0 {
+		return 0, fmt.Errorf("no answers found")
 	}
 
 	totalScore := 0
@@ -146,35 +182,54 @@ func (r *submissionRepository) CalculateScoreBySubmissionID(SubmissionID int) (f
 
 	for _, answer := range answers {
 		switch ans := answer.(type) {
-		case models.SubmissionAnswerTrueFalse:
+
+		case []models.SubmissionAnswerTrueFalse:
 			var correctAnswer models.TrueFalse
-			if err := r.DB.Where("question_id = ?", ans.QuestionID).First(&correctAnswer).Error; err != nil {
+			if err := r.DB.Where("question_id = ?", ans[0].QuestionID).First(&correctAnswer).Error; err != nil {
 				continue
 			}
 
 			var question models.Question
-			if err := r.DB.Where("id = ?", ans.QuestionID).First(&question).Error; err != nil {
+			if err := r.DB.Where("id = ?", ans[0].QuestionID).First(&question).Error; err != nil {
 				continue
 			}
 
 			totalWeight += question.Weight
-			if ans.AnswerSubmitted == correctAnswer.ExpectAnswer {
+			if ans[0].AnswerSubmitted == correctAnswer.ExpectAnswer {
 				totalScore += question.Weight
 			}
 
-		case models.SubmissionAnswerShortAnswer:
+		case []models.SubmissionAnswerShortAnswer:
 			var correctAnswer models.ShortAnswer
-			if err := r.DB.Where("question_id = ?", ans.QuestionID).First(&correctAnswer).Error; err != nil {
+			if err := r.DB.Where("question_id = ?", ans[0].QuestionID).First(&correctAnswer).Error; err != nil {
 				continue
 			}
 
 			var question models.Question
-			if err := r.DB.Where("id = ?", ans.QuestionID).First(&question).Error; err != nil {
+			if err := r.DB.Where("id = ?", ans[0].QuestionID).First(&question).Error; err != nil {
 				continue
 			}
 
+
 			totalWeight += question.Weight
-			if ans.AnswerSubmitted == correctAnswer.ExpectAnswer {
+			if ans[0].AnswerSubmitted == correctAnswer.ExpectAnswer {
+				totalScore += question.Weight
+			}
+
+		case []models.SubmissionAnswerMultipleChoice:
+			var correctOption models.MultipleChoiceOption
+			if err := r.DB.Where("id = ?", ans[0].MultipleChoiceOptionID).First(&correctOption).Error; err != nil {
+				continue
+			}
+
+			var question models.Question
+			if err := r.DB.Where("id = ?", ans[0].QuestionID).First(&question).Error; err != nil {
+				continue
+			}
+
+
+			totalWeight += question.Weight
+			if correctOption.IsCorrect {
 				totalScore += question.Weight
 			}
 		}
