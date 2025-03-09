@@ -22,11 +22,17 @@ go mod tidy
 go run main.go
 ```
 
-## API Contract ⚖️
-Anda dapat mengakses penjelasan secara detail pada setiap routes melalui [swagger](https://app.swaggerhub.com/apis/CleoExcellen/OPREC_RISTEK/1.0.0) atau [postman](https://api-ristek.postman.co/workspace/API-RISTEK-Workspace~c1cb0d07-3c89-45f6-82b9-3202ba8d08b1/collection/38268031-b06bb323-8b25-42d0-8c4d-d884686e69b2?action=share&creator=38268031)
-
-## UML Class Diagram 🧮
+## Database Schema 🧮
+![Database Schema](media/ristektest.drawio.png)
 Anda dapat mengakses UML class diagram secara detail melalui [UML Class Diagram](https://drive.google.com/file/d/1BPHj7ASMM-Z0S8Xk1e_Pz4piF7uR2Mbl/view?usp=sharing)
+
+## API Contract ⚖️
+Anda dapat mengakses penjelasan secara detail pada setiap routes melalui [swagger](https://app.swaggerhub.com/apis-docs/CleoExcellen/OPREC_RISTEK/1.0.0) atau [postman](https://api-ristek.postman.co/workspace/API-RISTEK-Workspace~c1cb0d07-3c89-45f6-82b9-3202ba8d08b1/collection/38268031-b06bb323-8b25-42d0-8c4d-d884686e69b2?action=share&creator=38268031)
+
+## Demo API
+[Demo API](media/postmanpenjelasan.MP4)
+Anda dapat mengakses Demo API secara detail melalui [Youtube](https://youtu.be/gDcPSEZQLvk?si=aiRpj07i4zYPRL17)
+
 
 ## Penjelasan 📜
 - Pada category tryout hanya terdiri dari Biologi, Physics, Math, Chemistry, dan History.
