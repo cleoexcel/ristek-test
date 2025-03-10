@@ -1,4 +1,4 @@
-# RISTEK TEST - Cleo Excellen Iskandar✍🏻
+# RISTEK TEST BE Lvl 4 - Cleo Excellen Iskandar✍🏻
 ## Pre-Requisite 🔌
 Before cloning this repository make sure:
 1. [Go](https://go.dev/doc/install) is installed
